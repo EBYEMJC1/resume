@@ -24,18 +24,22 @@
             font-weight: bold;
             font-size: 1.2em;
             margin-top: 20px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 5px;
         }.experience,.extracurricular {
             margin-top: 20px;
         }.job-title {
             font-weight: bold;
+            display: flex;
+            justify-content: space-between;
         }.location {
             font-style: italic;
+            display: flex;
+            justify-content: space-between;
         }
         ul {
             list-style-type: disc;
             margin-left: 20px;
-        }.right-align {
-            text-align: right;
         }
     </style>
 </head>
@@ -49,10 +53,14 @@
 
         <div class="education">
             <div class="section-title">Education</div>
-            <div class="right-align">May 2025</div>
-            <p>Bachelor of Science in Biology and Bachelor of Science in Computer Science</p>
-            <p>California State University, Fullerton</p>
-            <p>GPA: 3.45</p>
+            <div class="job-title">
+                <span>Bachelor of Science in Biology and Bachelor of Science in Computer Science</span>
+                <span>May 2025</span>
+            </div>
+            <div class="location">
+                <span>California State University, Fullerton</span>
+                <span>GPA: 3.45</span>
+            </div>
             <p>Expected Graduation: May 2025</p>
         </div>
 
@@ -63,65 +71,103 @@
 
         <div class="experience">
             <div class="section-title">Experience</div>
-            <div class="job-title">Crew</div>
-            <p class="location">Chipotle, 22245 El Paseo, Rancho Santa Margarita, CA</p>
-            <p>August 2023 - Present</p>
+            <div class="job-title">
+                <span>Crew</span>
+                <span>August 2023 - Present</span>
+            </div>
+            <div class="location">
+                <span>Chipotle</span>
+                <span>22245 El Paseo, Rancho Santa Margarita, CA</span>
+            </div>
             <ul>
                 <li>Ensured high order accuracy by implementing a step-by-step confirmation process and verbally verifying item details, consistently limiting errors to fewer than 4 per 5-hour shift</li>
                 <li>Utilized the cash register to charge 10–20 customers per shift, <strong>double-checking totals</strong> to prevent overcharging and <strong>ensuring extras</strong> like cups and chips were included when ordered</li>
                 <li>Fostered safe food consumption by strictly following detailed operational and sanitation protocols during 100% of my closing shifts, reducing potential contamination risks</li>
             </ul>
 
-            <div class="job-title">Supplemental Instruction Leader (Computer Science)</div>
-            <p class="location">CSUF, 800 N State College Blvd, Fullerton, CA</p>
-            <p>August 2022 - Present</p>
+            <div class="job-title">
+                <span>Supplemental Instruction Leader (Computer Science)</span>
+                <span>August 2022 - Present</span>
+            </div>
+            <div class="location">
+                <span>CSUF</span>
+                <span>800 N State College Blvd, Fullerton, CA</span>
+            </div>
             <ul>
                 <li>Tailored communication strategies, incorporating <strong>analogies & rephrasing</strong>, to simplify complex technical concepts related to hybrid x86-64 assembly with C++ enhancing comprehension</li>
                 <li>Boosted student performance by <strong>adapting explanations</strong> through active questioning and observation, leading SI attendees to score 1–1.5x higher than non-attendees</li>
             </ul>
 
-            <div class="job-title">CREP Student Researcher</div>
-            <p class="location">CSUF, 800 N State College Blvd, Fullerton, CA</p>
-            <p>August 2022 - May 2023</p>
+            <div class="job-title">
+                <span>CREP Student Researcher</span>
+                <span>August 2022 - May 2023</span>
+            </div>
+            <div class="location">
+                <span>CSUF</span>
+                <span>800 N State College Blvd, Fullerton, CA</span>
+            </div>
             <ul>
                 <li>Managed and <strong>cleaned</strong> a complex health-related dataset (N=62,482) from the Tennessee Cancer Registry for localized malignant breast cancer (LMBC)</li>
                 <li>Reviewed 5 papers on various cancers to <strong>identify demographic and clinical variables</strong> consistently linked to outcomes (e.g., age, marital status, insurance type)</li>
                 <li>Performed quantitative analysis, including <strong>Chi-square tests and multivariate logistic regression</strong>, on cleaned health data</li>
             </ul>
 
-            <div class="job-title">DIA Jumpstart Student Researcher</div>
-            <p class="location">University of Southern California</p>
-            <p>June 2022 - August 2022</p>
+            <div class="job-title">
+                <span>DIA Jumpstart Student Researcher</span>
+                <span>June 2022 - August 2022</span>
+            </div>
+            <div class="location">
+                <span>University of Southern California</span>
+            </div>
             <ul>
                 <li>Employed a bash script to process and trim RNA sequencing datasets, using <strong>Seqtk v1.3</strong> removing 5 base pairs iteratively from the 3' end of reads until a minimum length of 36 bp</li>
                 <li>Explored <strong>read length effect</strong> through use of 12 samples finding that read length from 36 to 76 bp raised HLA caller accuracy from 63% to 77%, except for PHLAT, seq2HLA, and HLAMiner</li>
             </ul>
 
-            <div class="job-title">CIC-PCUBED</div>
-            <p class="location">CSUF, 800 N State College Blvd, Fullerton, CA</p>
-            <p>June 2022 - August 2022</p>
+            <div class="job-title">
+                <span>CIC-PCUBED</span>
+                <span>June 2022 - August 2022</span>
+            </div>
+            <div class="location">
+                <span>CSUF</span>
+                <span>800 N State College Blvd, Fullerton, CA</span>
+            </div>
             <ul>
                 <li>Collaborated on a Python project to identify cointegrated stocks for financial analysis</li>
             </ul>
 
-            <div class="job-title">Supplemental Instruction Leader (Biology)</div>
-            <p class="location">CSUF, 800 N State College Blvd, Fullerton, CA</p>
-            <p>August 2019 - May 2022</p>
+            <div class="job-title">
+                <span>Supplemental Instruction Leader (Biology)</span>
+                <span>August 2019 - May 2022</span>
+            </div>
+            <div class="location">
+                <span>CSUF</span>
+                <span>800 N State College Blvd, Fullerton, CA</span>
+            </div>
             <ul>
                 <li>Facilitated 2 weekly SI sessions for BIOL 151, a foundational course covering topics such as cellular structures, metabolic pathways, and gene regulation.</li>
                 <li>Supported increased course pass rates, as students attending SI sessions have an 83% pass rate in gateway courses, compared to 76% for those who do not participate</li>
             </ul>
 
-            <div class="job-title">ASSURE-US Member</div>
-            <p class="location">CSUF, 800 N State College Blvd, Fullerton, CA</p>
-            <p>November 2019 - August 2021</p>
+            <div class="job-title">
+                <span>ASSURE-US Member</span>
+                <span>November 2019 - August 2021</span>
+            </div>
+            <div class="location">
+                <span>CSUF</span>
+                <span>800 N State College Blvd, Fullerton, CA</span>
+            </div>
             <ul>
                 <li>Developed a decision tree model using <strong>scikit-learn</strong> in Python to analyze data for viable drug candidates targeting HIV-1 integrase.</li>
             </ul>
 
-            <div class="job-title">Summer Undergraduate Research Fellowship</div>
-            <p class="location">University of Southern California</p>
-            <p>June 2021 - August 2021</p>
+            <div class="job-title">
+                <span>Summer Undergraduate Research Fellowship</span>
+                <span>June 2021 - August 2021</span>
+            </div>
+            <div class="location">
+                <span>University of Southern California</span>
+            </div>
             <ul>
                 <li>Ran HLA typing pipelines using Bash with OptiType, PHLAT, and seq2HLA on RNA-seq data across six gold standard datasets</li>
                 <li>Estimated allele-level accuracy of 99.4% (OptiType), 95.4% (PHLAT), and 95.9% (seq2HLA) for MHC class I, using the formula: (correct alleles / total alleles) × 100</li>
@@ -129,16 +175,26 @@
                 <li>Recorded memory usage via <code>/usr/bin/time -v</code>, with averages of 14.2 GB (OptiType), 9.3 GB (PHLAT), and 0.36 GB (seq2HLA)</li>
             </ul>
 
-            <div class="job-title">Peer Mentor</div>
-            <p class="location">CSUF, 800 N State College Blvd, Fullerton, CA</p>
-            <p>August 2018 - December 2018</p>
+            <div class="job-title">
+                <span>Peer Mentor</span>
+                <span>August 2018 - December 2018</span>
+            </div>
+            <div class="location">
+                <span>CSUF</span>
+                <span>800 N State College Blvd, Fullerton, CA</span>
+            </div>
             <ul>
                 <li>Provided personalized support to 25 students in the “Think Like Einstein” course by addressing questions and guiding them to campus resources such as Titan Connection, Titan Link, counselors, research opportunities, and professional communication skills</li>
             </ul>
 
-            <div class="job-title">Orientation Leader</div>
-            <p class="location">CSUF, 800 N State College Blvd, Fullerton, CA</p>
-            <p>June 2018 - August 2018</p>
+            <div class="job-title">
+                <span>Orientation Leader</span>
+                <span>June 2018 - August 2018</span>
+            </div>
+            <div class="location">
+                <span>CSUF</span>
+                <span>800 N State College Blvd, Fullerton, CA</span>
+            </div>
             <ul>
                 <li>Guided diverse groups of new students, presenting essential campus resources and procedures daily to groups of 25-30 students</li>
             </ul>
