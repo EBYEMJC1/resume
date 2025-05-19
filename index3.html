@@ -109,6 +109,18 @@
         .bullet-inputs input[type="text"] {
             margin-bottom: 5px;
         }
+         .bullet-item { /* Wrapper for input + remove button */
+             display: flex;
+             align-items: center;
+             margin-bottom: 5px;
+         }
+         .bullet-item input {
+             flex-grow: 1; /* Input takes available space */
+             margin-bottom: 0 !important; /* Override default margin */
+             margin-right: 5px;
+         }
+
+
         .bullet-inputs .add-bullet-button {
             background-color: #28a745;
             margin-right: 5px;
@@ -118,11 +130,10 @@
          }
          .bullet-inputs .remove-bullet-button {
               background-color: #6c757d;
-              margin-left: 5px;
+              flex-shrink: 0; /* Don't shrink button */
               padding: 2px 5px;
               font-size: 10px;
               height: 24px;
-              vertical-align: bottom;
          }
          .bullet-inputs .remove-bullet-button:hover {
               background-color: #5a6268;
@@ -153,6 +164,28 @@
              margin-top: 0;
              padding: 2px 8px;
          }
+
+         .date-required label::after {
+             content: "*";
+             color: red;
+             margin-left: 2px;
+         }
+         .date-guide {
+             font-size: 10px;
+             color: #555;
+             margin-top: -8px; /* Pull it closer to the input */
+             margin-bottom: 10px;
+         }
+          .bullet-length-feedback {
+              font-size: 10px;
+              color: #d9534f; /* Reddish color for warning */
+              margin-top: -8px;
+              margin-bottom: 8px;
+              display: none; /* Hide by default */
+          }
+           .bullet-length-feedback.show {
+               display: block;
+           }
 
 
         /* --- Resume Display Styles (Optimized for tightness) --- */
@@ -293,11 +326,11 @@
 
             <div class="input-section">
                 <h3>Header Info</h3>
-                <label for="name">Name:</label><input type="text" id="name" value="Sara Sadek">
-                <label for="address">Address:</label><input type="text" id="address" value="Rancho Santa Margarita, CA 92688">
-                <label for="email">Email:</label><input type="email" id="email" value="EBYEYMCIIcoaoL@gmail.com">
-                <label for="phone">Phone:</label><input type="tel" id="phone" value="(310) 595-0876">
-                <label for="linkedin">LinkedIn URL:</label><input type="text" id="linkedin" value="https://www.linkedin.com/in/sara-ayoub-sadek-630b55168">
+                <label for="name">Name:</label><input type="text" id="name" placeholder="Your Name">
+                <label for="address">Address:</label><input type="text" id="address" placeholder="City, State Zip">
+                <label for="email">Email:</label><input type="email" id="email" placeholder="email@example.com">
+                <label for="phone">Phone:</label><input type="tel" id="phone" placeholder="(XXX) XXX-XXXX">
+                <label for="linkedin">LinkedIn URL:</label><input type="text" id="linkedin" placeholder="https://linkedin.com/in/yourprofile">
                 <button onclick="updateHeader()">Update Header</button>
             </div>
 
@@ -318,19 +351,18 @@
                 <ul id="section-remove-list">
                     <!-- Removable sections will be listed here by JS -->
                 </ul>
-                 <p style="font-size: 10px; color:#555; margin-top: 10px;">Initial sections (Education, Skills, Experience, Extracurricular) cannot be removed here.</p>
             </div>
 
             <div class="input-section" id="add-education-entry-section">
                 <h3>Add Education Entry</h3>
                  <label for="edu-section-select">Select Section:</label>
                  <select id="edu-section-select" class="section-select"></select>
-                <label for="edu-degree">Degree:</label><input type="text" id="edu-degree" value="Bachelor of Science in Biology and Bachelor of Science in Computer Science">
-                <label for="edu-institution">Institution:</label><input type="text" id="edu-institution" value="California State University, Fullerton">
-                <label for="edu-date"><span style="color: red;">*</span> End Date:</label><input type="text" id="edu-date" value="May 2025" placeholder="e.g. May 2025, 2023 (Required for sorting)">
-                <label for="edu-gpa">GPA:</label><input type="text" id="edu-gpa" value="3.45">
-                <label for="edu-expected">Additional Line (e.g., Expected Graduation):</label><input type="text" id="edu-expected" value="Expected Graduation: May 2025">
-                 <p style="font-size: 10px; color:#555; margin-top: 5px;">End Date is required for sorting.</p>
+                <label for="edu-degree">Degree:</label><input type="text" id="edu-degree" placeholder="e.g. Bachelor of Science in Biology">
+                <label for="edu-institution">Institution:</label><input type="text" id="edu-institution" placeholder="e.g. California State University, Fullerton">
+                <label class="date-required" for="edu-date">End Date:</label><input type="text" id="edu-date" placeholder="e.g. May 2025, 2023">
+                 <p class="date-guide">Required for sorting. Use format "Month YYYY" or "YYYY".</p>
+                <label for="edu-gpa">GPA:</label><input type="text" id="edu-gpa" placeholder="e.g. 3.45">
+                <label for="edu-expected">Additional Line (Optional):</label><input type="text" id="edu-expected" placeholder="e.g. Expected Graduation: May 2025">
                 <button onclick="addEducationEntryForm()">Add Entry</button>
             </div>
 
@@ -339,7 +371,7 @@
                  <label for="para-section-select">Select Section:</label>
                  <select id="para-section-select" class="section-select"></select>
                 <label for="skills-content">Paragraph Content:</label>
-                <textarea id="skills-content" rows="3">Microscopy, Aseptic Technique, Micropipetting, Spectrophotometry, Gel Electrophoresis, Capsule Stain, Python, Bash, C++ (novice), x86 (novice), Data Analysis, Procedural Adherence, Customer Service, Communication.</textarea>
+                <textarea id="skills-content" rows="3" placeholder="Comma-separated list of skills."></textarea>
                  <p style="font-size: 10px; color:#555; margin-top: 5px;">Paragraph sections are not sorted by date.</p>
                 <button onclick="setParagraphContentForm()">Set Content</button>
             </div>
@@ -348,18 +380,33 @@
                 <h3>Add Structured Entry (e.g., Experience, Projects)</h3>
                  <label for="structured-section-select">Select Section:</label>
                  <select id="structured-section-select" class="section-select"></select>
-                <label for="structured-position">Position/Title:</label><input type="text" id="structured-position">
-                <label for="structured-company">Company:</label><input type="text" id="structured-company">
-                <label for="structured-location">Location:</label><input type="text" id="structured-location">
-                <label for="structured-dates"><span style="color: red;">*</span> Dates:</label><input type="text" id="structured-dates" placeholder="e.g. Aug 2023 - Present, 2022 - 2023 (Required for sorting)">
+                <label for="structured-position">Position/Title:</label><input type="text" id="structured-position" placeholder="e.g. Crew">
+                <label for="structured-company">Company:</label><input type="text" id="structured-company" placeholder="e.g. Chipotle">
+                <label for="structured-location">Location:</label><input type="text" id="structured-location" placeholder="e.g. City, State">
+                <label class="date-required" for="structured-dates">Dates:</label><input type="text" id="structured-dates" placeholder="e.g. Aug 2023 - Present, June 2022 - Aug 2022, 2021">
+                 <p class="date-guide">Required for sorting. Use format "Mon YYYY - Mon YYYY", "YYYY - YYYY", "Month YYYY", or "YYYY".</p>
 
                 <div class="bullet-inputs" id="structured-bullets">
                     <label>Details/Bullets:</label>
-                     <div class="bullet-guide">Use **text** for bolding. Click "Add Bullet" for more lines.</div>
-                    <div><input type="text" class="bullet-input" placeholder="Enter detail or leave blank"></div>
+                     <div class="bullet-guide">
+                         Use **text** for bolding.
+                         <br>Write achievement-oriented bullets starting with action verbs.
+                         <br>Include quantifiable results (numbers, percentages) where possible.
+                          <br>Consider the STAR method (Situation, Task, Action, Result) or How-What-Why.
+                         <br>Keep bullets concise (ideally 1-2 lines).
+                         <br>Click "Add Another Bullet" for more lines.
+                     </div>
+                    <div class="bullet-item">
+                        <input type="text" class="bullet-input" placeholder="e.g. Ensured high order accuracy by implementing a step-by-step confirmation process, consistently limiting errors to fewer than 4 per 5-hour shift (Showcases: Accuracy, Process, Results)">
+                        <button class="remove-bullet-button" type="button" onclick="removeBulletItem(this)">x</button>
+                    </div>
+                     <div class="bullet-item">
+                         <input type="text" class="bullet-input" placeholder="e.g. Developed a decision tree model using **scikit-learn** in Python to analyze data for viable drug candidates targeting HIV-1 integrase. (Showcases: Technical Skills, Project, Purpose)">
+                         <button class="remove-bullet-button" type="button" onclick="removeBulletItem(this)">x</button>
+                     </div>
+                    <p class="bullet-length-feedback"></p> <!-- Feedback message -->
                 </div>
-                <button class="add-bullet-button" onclick="addBulletInput('structured-bullets')">Add Another Bullet</button>
-                 <p style="font-size: 10px; color:#555; margin-top: 5px;">Dates are required for sorting.</p>
+                <button class="add-bullet-button" type="button" onclick="addBulletInput('structured-bullets')">Add Another Bullet</button>
                 <button onclick="addStructuredEntryForm()">Add Entry</button>
             </div>
 
@@ -367,16 +414,20 @@
                 <h3>Add List Item (e.g., Activities, Awards)</h3>
                  <label for="list-section-select">Select Section:</label>
                  <select id="list-section-select" class="section-select"></select>
-                <label for="list-item-text"><span style="color: red;">*</span> List Item Text:</label>
-                <textarea id="list-item-text" rows="2" placeholder="e.g., STEM Advantage Scholar | Jan 2022 – Present (Include date for sorting)"></textarea>
-                 <p style="font-size: 10px; color:#555; margin-top: 5px;">Include a date in the text (e.g., Jan 2022, 2023) for sorting to work.</p>
+                <label class="date-required" for="list-item-text">List Item Text:</label>
+                <textarea id="list-item-text" rows="2" placeholder="e.g., STEM Advantage Scholar | January 2022 – Present"></textarea>
+                 <p class="date-guide">
+                     Required for sorting. Include a date in the text (e.g., Jan 2022, 2023) using formats like "Month YYYY", "YYYY", or "Mon YYYY – Mon YYYY".
+                     <br>Use **text** for bolding.
+                 </p>
                 <button onclick="addListItemForm()">Add Item</button>
             </div>
 
              <div class="input-section">
                  <h3>Reset/Clear</h3>
-                 <button onclick="clearResumeContent()">Clear All Dynamic Content</button>
-                 <button onclick="location.reload()">Reset Builder (Clear All)</button>
+                 <p style="font-size: 10px; color:#555;">"Clear All Dynamic Content" removes all entries but keeps the initial sections. "Reset Builder" clears everything and reloads the page with defaults.</p>
+                 <button onclick="clearResumeContent()">Clear All Entries</button>
+                 <button onclick="location.reload()">Reset Builder</button>
              </div>
 
 
@@ -386,9 +437,9 @@
             <!-- The Resume content will be built here -->
             <div class="container">
                 <div class="header">
-                    <h1 id="resume-name">Sara Sadek</h1>
-                    <p><span id="resume-contact">Rancho Santa Margarita, CA 92688 | EBYEYMCIIcoaoL@gmail.com | (310) 595-0876</span></p>
-                    <p><a href="https://www.linkedin.com/in/sara-ayoub-sadek-630b55168" id="resume-linkedin">LinkedIn Profile</a></p>
+                    <h1 id="resume-name"></h1>
+                    <p><span id="resume-contact"></span></p>
+                    <p><a href="#" id="resume-linkedin"></a></p>
                 </div>
                  <!-- Sections will be dynamically added here -->
                 <div id="resume-sections">
@@ -428,7 +479,7 @@
              }
 
              // Look for a date range (e.g., "Month Year - Month Year" or "Year - Year")
-             const dateRangeMatch = dateStr.match(/(\S+)\s*-\s*(\S+)/);
+             const dateRangeMatch = dateStr.match(/(\S+)\s*[-–]\s*(\S+)/); // Allow hyphen or en dash
              if (dateRangeMatch && dateRangeMatch[2]) {
                  // Attempt to parse the END date of the range
                  dateStr = dateRangeMatch[2];
@@ -437,29 +488,65 @@
              // Attempt to parse the remaining string
              let parsedDate;
 
-             // Try parsing "Month Year" or "Month, Year"
-             parsedDate = new Date(dateStr.replace(',', '') + ' 1'); // Add day 1 to make it a full date string
-             if (!isNaN(parsedDate.getTime())) {
-                 return parsedDate;
+             // Try parsing "Month Year" or "Month, Year" (case-insensitive month)
+             const monthYearMatch = dateStr.match(/([A-Za-z]+)\s*,?\s*(\d{4})/);
+             if (monthYearMatch) {
+                 parsedDate = new Date(`${monthYearMatch[1]} 1, ${monthYearMatch[2]}`);
+                  if (!isNaN(parsedDate.getTime())) {
+                     return parsedDate;
+                 }
              }
 
              // Try parsing just "Year"
-             parsedDate = new Date(dateStr + '-12-31'); // Use Dec 31 to ensure later sort than Jan 1 of same year
-             if (!isNaN(parsedDate.getTime())) {
-                 return parsedDate;
+             const yearMatch = dateStr.match(/^(\d{4})$/);
+              if (yearMatch) {
+                 parsedDate = new Date(`${yearMatch[1]}-12-31`); // Use Dec 31 to ensure later sort than Jan 1 of same year
+                 if (!isNaN(parsedDate.getTime())) {
+                     return parsedDate;
+                 }
              }
 
-             // Try parsing common short formats like "Mon YYYY"
-             parsedDate = new Date(dateStr.replace(/(\w+)\s+(\d{4})/, '$1 1, $2'));
-              if (!isNaN(parsedDate.getTime())) {
-                 return parsedDate;
+             // Try parsing common short formats like "Mon YYYY" (case-insensitive month)
+             const shortMonthYearMatch = dateStr.match(/^([A-Za-z]{3,})\s+(\d{4})$/); // Month name (3+ letters) followed by year
+             if (shortMonthYearMatch) {
+                 parsedDate = new Date(`${shortMonthYearMatch[1]} 1, ${shortMonthYearMatch[2]}`);
+                  if (!isNaN(parsedDate.getTime())) {
+                     return parsedDate;
+                 }
              }
-
 
              // If all attempts fail, return null
              console.warn(`Could not parse date for sorting: "${dateStr}"`);
              return null;
          }
+
+         // Helper for bullet length feedback
+         function checkBulletLength(inputElement) {
+             const maxLength = 180; // Approximate reasonable max length for a bullet point line
+             const feedbackElement = inputElement.closest('.bullet-inputs').querySelector('.bullet-length-feedback');
+
+             if (inputElement.value.length > maxLength) {
+                 feedbackElement.textContent = `Bullet is quite long (${inputElement.value.length} chars). Consider breaking it into multiple points.`;
+                 feedbackElement.classList.add('show');
+             } else {
+                  // Check if all bullets are short enough before hiding
+                  const allInputs = inputElement.closest('.bullet-inputs').querySelectorAll('.bullet-input');
+                  let anyTooLong = false;
+                  allInputs.forEach(input => {
+                      if (input.value.length > maxLength) {
+                           anyTooLong = true;
+                      }
+                  });
+                  if (!anyTooLong) {
+                       feedbackElement.classList.remove('show');
+                  } else {
+                       // If some are still too long, update the message
+                       feedbackElement.textContent = `Some bullets are quite long. Consider breaking them.`;
+                       feedbackElement.classList.add('show');
+                  }
+             }
+         }
+
 
         // --- Resume Rendering ---
         function renderResumeSections() {
@@ -481,7 +568,7 @@
 
                  // Add initial structure based on type if needed (e.g., empty ul for list types)
                  // Content will be populated later into this structure
-                 if (section.type === 'list-item' || section.type === 'extracurricular') {
+                 if (section.type === 'list-item') { // Extracurricular type is now just list-item type
                      const ul = document.createElement('ul');
                      contentDiv.appendChild(ul);
                  }
@@ -551,16 +638,20 @@
 
             // Generate a unique ID (lowercase, hyphenated)
             const baseId = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''); // Basic sanitization
-            let sectionId = baseId || 'new-section'; // Ensure ID is not empty
+            let sectionId = baseId || `new-section-${Date.now()}`; // Fallback ID if title is empty after sanitization
             let counter = 1;
-             const initialSectionIds = ['education', 'technical-skills', 'experience', 'extracurricular']; // Prevent conflicts with initial IDs
 
-            while (dynamicSections.some(s => s.id === sectionId) || initialSectionIds.includes(sectionId)) {
+            // Ensure ID is unique among existing sections
+            while (dynamicSections.some(s => s.id === sectionId)) {
                 sectionId = `${baseId}-${counter++}`;
+                 if (counter > 100) { // Prevent infinite loops
+                     sectionId = `section-${Date.now()}`;
+                     break;
+                 }
             }
 
 
-            dynamicSections.push({ id: sectionId, title: title, type: type }); // Add to our data structure (entries will be added to resumeContentData)
+            dynamicSections.push({ id: sectionId, title: title, type: type }); // Add to our data structure
              resumeContentData.sections[sectionId] = []; // Initialize content array for the new section
 
 
@@ -576,19 +667,13 @@
             const removeList = document.getElementById('section-remove-list');
             removeList.innerHTML = ''; // Clear list
 
-            const initialSectionIds = ['education', 'technical-skills', 'experience', 'extracurricular']; // Prevent removing these via UI
-
             dynamicSections.forEach(section => {
-                 if (initialSectionIds.includes(section.id)) {
-                    // Skip initial sections
-                     return;
-                }
-
                 const li = document.createElement('li');
                 li.textContent = section.title;
                 const removeButton = document.createElement('button');
                 removeButton.classList.add('remove-button');
                 removeButton.textContent = 'Remove';
+                removeButton.type = 'button'; // Prevent form submission
                 removeButton.onclick = () => removeSection(section.id);
                 li.appendChild(removeButton);
                 removeList.appendChild(li);
@@ -600,6 +685,15 @@
              const index = dynamicSections.findIndex(section => section.id === id);
 
              if (index !== -1) {
+                 // Confirm removal, especially for initial sections
+                 const isInitialSection = ['education', 'technical-skills', 'experience', 'extracurricular'].includes(id);
+                 if (isInitialSection) {
+                      const confirmRemove = confirm(`Are you sure you want to remove the "${dynamicSections[index].title}" section? This cannot be undone.`);
+                      if (!confirmRemove) {
+                          return; // Stop removal if not confirmed
+                      }
+                 }
+
                  // Remove the section from the array
                  dynamicSections.splice(index, 1);
 
@@ -624,7 +718,13 @@
              }
 
              // Add the sortable date to the data object
-             data.sortDate = parseDateForSorting(data.date);
+             const sortDate = parseDateForSorting(data.date);
+              if (!sortDate) {
+                  alert(`Education entry requires a valid date for sorting ("${data.date}" could not be parsed). Please try again.`);
+                  return; // Prevent adding if date parsing fails
+              }
+             data.sortDate = sortDate;
+
 
              if (!resumeContentData.sections[sectionId]) {
                  resumeContentData.sections[sectionId] = [];
@@ -649,14 +749,7 @@
              }
 
              const data = { degree, institution, date, gpa, expected };
-             addEducationEntry(sectionId, data);
-
-             // Clear form
-             document.getElementById('edu-degree').value = '';
-             document.getElementById('edu-institution').value = '';
-             document.getElementById('edu-date').value = '';
-             document.getElementById('edu-gpa').value = '';
-             document.getElementById('edu-expected').value = '';
+             addEducationEntry(sectionId, data); // Call the function that handles adding and validation
          }
 
          // Set Paragraph Content (for skills or custom paragraph sections)
@@ -692,7 +785,13 @@
              }
 
              // Add the sortable date to the data object
-             data.sortDate = parseDateForSorting(data.dates);
+             const sortDate = parseDateForSorting(data.dates);
+              if (!sortDate) {
+                   alert(`Structured entry requires valid dates for sorting ("${data.dates}" could not be parsed). Please try again.`);
+                   return; // Prevent adding if date parsing fails
+              }
+             data.sortDate = sortDate;
+
 
              if (!resumeContentData.sections[sectionId]) {
                  resumeContentData.sections[sectionId] = [];
@@ -716,17 +815,33 @@
                  alert("Please fill out Position, Company, and Dates.");
                  return;
              }
+              if (bullets.length === 0) {
+                  alert("Please add at least one bullet point.");
+                  return;
+              }
 
              const data = { position, company, location, dates, bullets };
-             addStructuredEntry(sectionId, data);
+             addStructuredEntry(sectionId, data); // Call the function that handles adding and validation
 
-             // Clear form
+             // Clear form and reset bullets
              document.getElementById('structured-position').value = '';
              document.getElementById('structured-company').value = '';
              document.getElementById('structured-location').value = '';
              document.getElementById('structured-dates').value = '';
              const structuredBulletsContainer = document.getElementById('structured-bullets');
-              structuredBulletsContainer.innerHTML = `<label>Details/Bullets:</label><div class="bullet-guide">Use **text** for bolding. Click "Add Bullet" for more lines.</div><div><input type="text" class="bullet-input" placeholder="Enter detail or leave blank"></div>`; // Reset bullets
+             structuredBulletsContainer.innerHTML = `
+                 <label>Details/Bullets:</label>
+                 <div class="bullet-guide">
+                     Use **text** for bolding.<br>Write achievement-oriented bullets starting with action verbs.<br>Include quantifiable results (numbers, percentages) where possible.<br>Consider the STAR method (Situation, Task, Action, Result) or How-What-Why.<br>Keep bullets concise (ideally 1-2 lines).<br>Click "Add Another Bullet" for more lines.
+                 </div>
+                 <div class="bullet-item">
+                     <input type="text" class="bullet-input" placeholder="Enter bullet point">
+                     <button class="remove-bullet-button" type="button" onclick="removeBulletItem(this)">x</button>
+                 </div>
+                 <p class="bullet-length-feedback"></p>
+             `;
+              // Re-add event listener to the *new* bullet input
+             structuredBulletsContainer.querySelector('.bullet-input').addEventListener('input', function() { checkBulletLength(this); });
          }
 
 
@@ -739,8 +854,12 @@
              }
 
              // Add the sortable date to the data object (parse from the text)
-             // We'll store the list item as an object { text: ..., sortDate: ... }
-             const data = { text: text, sortDate: parseDateForSorting(text) };
+             const sortDate = parseDateForSorting(text);
+              if (!sortDate) {
+                   alert(`List item requires a date in the text for sorting ("${text}" could not be parsed). Please try again, ensuring the date format is recognized.`);
+                   return; // Prevent adding if date parsing fails
+              }
+             const data = { text: text, sortDate: sortDate };
 
 
              if (!resumeContentData.sections[sectionId]) {
@@ -760,33 +879,27 @@
                 return;
             }
 
-            // Check if text contains something parseable as a date for sorting purposes
-            if (!parseDateForSorting(text)) {
-                 const confirmAdd = confirm("Warning: Could not find a date in the text for sorting. This item might appear at the end of the section. Continue?");
-                 if (!confirmAdd) {
-                     return;
-                 }
-             }
-
-            addListItem(sectionId, text);
+            addListItem(sectionId, text); // Call the function that handles adding and validation
 
             // Clear form
             document.getElementById('list-item-text').value = '';
          }
 
-        // Dynamic Bullet Input Helper (reused)
+        // Dynamic Bullet Input Helper
         function addBulletInput(containerId) {
             const container = document.getElementById(containerId);
-             // Find the element *before* the buttons to insert before them
-             const addButton = container.parentNode.querySelector('.add-bullet-button'); // Assuming add button is sibling of bullet-inputs div
-             const insertBeforeElement = addButton ? addButton : container.lastElementChild; // Insert before add button if found, else last element
-
+             // Find the feedback paragraph to insert before it
+             const feedbackElement = container.querySelector('.bullet-length-feedback');
 
             const div = document.createElement('div'); // Wrap input and button
+            div.classList.add('bullet-item');
             const input = document.createElement('input');
             input.type = 'text';
             input.classList.add('bullet-input');
-            input.placeholder = 'Enter detail or leave blank';
+            input.placeholder = 'Enter bullet point';
+             // Add event listener for length check on the new input
+            input.addEventListener('input', function() { checkBulletLength(this); });
+
 
              // Add a small button to remove this bullet input
             const removeButton = document.createElement('button');
@@ -795,13 +908,30 @@
             removeButton.type = 'button'; // Prevent form submission
             removeButton.onclick = function() {
                 div.remove(); // Remove the wrapper div
+                 // Re-check lengths after removing an input
+                 checkBulletLength(container.querySelector('.bullet-input')); // Check any remaining input
             };
 
             div.appendChild(input);
             div.appendChild(removeButton);
-            // Insert the new bullet input div before the add bullet button or at the end
-             container.insertBefore(div, insertBeforeElement);
+            // Insert the new bullet input div before the feedback paragraph
+             container.insertBefore(div, feedbackElement);
         }
+
+         // Helper to remove a bullet item wrapper div
+         function removeBulletItem(buttonElement) {
+             const bulletItemDiv = buttonElement.closest('.bullet-item');
+             const container = bulletItemDiv.closest('.bullet-inputs');
+             bulletItemDiv.remove();
+             // Re-check lengths after removal
+              const remainingInputs = container.querySelectorAll('.bullet-input');
+              if (remainingInputs.length > 0) {
+                 checkBulletLength(remainingInputs[0]); // Check the first remaining input
+              } else {
+                  // If no inputs left, hide feedback
+                  container.querySelector('.bullet-length-feedback').classList.remove('show');
+              }
+         }
 
 
         // --- Populate Resume Content into Rendered Sections ---
@@ -867,8 +997,8 @@
 
                      case 'paragraph':
                           // Only expect one paragraph entry per section of this type
-                          const paragraphText = entries[0] || ''; // Get the single stored item
-                          if (paragraphText) {
+                          const paragraphText = entries[0] || ''; // Get the single stored item (or empty string)
+                          if (paragraphText) { // Only create paragraph if content exists
                               const p = document.createElement('p');
                               p.innerHTML = processBolding(paragraphText);
                               contentDiv.appendChild(p);
@@ -922,11 +1052,12 @@
         // --- Initial Setup ---
         function initializeResume() {
             // Define initial sections with unique IDs and types
+            // These IDs match the original resume structure
             dynamicSections = [
                 { id: 'education', title: 'Education', type: 'education-entry' },
                 { id: 'technical-skills', title: 'Technical Skills', type: 'paragraph' },
                 { id: 'experience', title: 'Experience', type: 'structured-entry' },
-                { id: 'extracurricular', title: 'Extracurricular Activities', type: 'list-item' }
+                { id: 'extracurricular', title: 'Extracurricular Activities', type: 'list-item' } // Changed type to list-item
             ];
 
             // Initialize content data structure for defined sections
@@ -937,13 +1068,41 @@
             // Render the basic section structure
             renderResumeSections(); // This will call populateResumeContent() implicitly the first time
 
-            // Populate the initial content based on the default values in the input fields
+            // --- Populate Input Forms with Default Values / Placeholders ---
+            // Header
+            document.getElementById('name').value = 'Sara Sadek';
+            document.getElementById('address').value = 'Rancho Santa Margarita, CA 92688';
+            document.getElementById('email').value = 'EBYEYMCIIcoaoL@gmail.com';
+            document.getElementById('phone').value = '(310) 595-0876';
+            document.getElementById('linkedin').value = 'https://www.linkedin.com/in/sara-ayoub-sadek-630b55168';
+
+            // Education
+             document.getElementById('edu-degree').value = 'Bachelor of Science in Biology and Bachelor of Science in Computer Science';
+             document.getElementById('edu-institution').value = 'California State University, Fullerton';
+             document.getElementById('edu-date').value = 'May 2025';
+             document.getElementById('edu-gpa').value = '3.45';
+             document.getElementById('edu-expected').value = 'Expected Graduation: May 2025';
+
+            // Technical Skills
+             document.getElementById('skills-content').value = 'Microscopy, Aseptic Technique, Micropipetting, Spectrophotometry, Gel Electrophoresis, Capsule Stain, Python, Bash, C++ (novice), x86 (novice), Data Analysis, Procedural Adherence, Customer Service, Communication.';
+
+            // Structured Entry (Experience default examples are already in HTML placeholders)
+            // Add event listeners to the default bullet inputs for length check
+             document.querySelectorAll('#structured-bullets .bullet-input').forEach(input => {
+                input.addEventListener('input', function() { checkBulletLength(this); });
+                checkBulletLength(input); // Check on load in case default is long
+             });
+
+
+            // List Item (Extracurricular default example is already in HTML placeholder)
+
+            // --- Populate Resume Preview with Default Content ---
             // This simulates adding the original resume content using the new data structure/functions
 
             // Header
             updateHeader(); // Reads default values from inputs and sets resumeContentData.header
 
-            // Education (add the default entry)
+            // Education (add the default entry from the form)
              addEducationEntry('education', {
                  degree: document.getElementById('edu-degree').value,
                  institution: document.getElementById('edu-institution').value,
@@ -952,7 +1111,7 @@
                  expected: document.getElementById('edu-expected').value
              });
 
-            // Technical Skills (set the default content)
+            // Technical Skills (set the default content from the form)
              setParagraphContent('technical-skills', document.getElementById('skills-content').value);
 
             // Experience (Add all default entries)
@@ -977,8 +1136,7 @@
                  'CSUF Chapter of ACM Member | August 2022 – May 2023',
                  'Example Older Activity | 2017 - 2018' // Add an older one to test sorting
              ];
-             defaultExtracurricularItems.forEach(item => addListItem('extracurricular', item));
-
+             defaultExtracurricularItems.forEach(itemText => addListItem('extracurricular', itemText)); // Pass text, not object
 
             // Update dropdowns and remove list after initial population
             populateSectionDropdowns();
@@ -986,58 +1144,26 @@
         }
 
         // --- Clear Content ---
-         function clearResumeContent() {
-             // Reset data structures
-             dynamicSections = [
-                 { id: 'education', title: 'Education', type: 'education-entry' },
-                 { id: 'technical-skills', title: 'Technical Skills', type: 'paragraph' },
-                 { id: 'experience', title: 'Experience', type: 'structured-entry' },
-                 { id: 'extracurricular', title: 'Extracurricular Activities', type: 'list-item' }
-             ];
-             resumeContentData = {
-                 header: {},
-                 sections: {}
-             };
-             // Re-initialize content arrays for default sections
-             dynamicSections.forEach(section => {
-                 resumeContentData.sections[section.id] = [];
-             });
+        // This function now only clears the *entries* within the existing sections
+        function clearResumeContent() {
+             // Clear content data for all sections
+             for (const sectionId in resumeContentData.sections) {
+                 if (resumeContentData.sections.hasOwnProperty(sectionId)) {
+                     resumeContentData.sections[sectionId] = []; // Clear the array of entries
+                 }
+             }
 
-
-             // Clear rendered sections
-             renderResumeSections(); // This also calls populateResumeContent, clearing the view
-
-             // Clear header display
+             // Reset Header display to blank (keeps the header section structure)
              document.getElementById('resume-name').textContent = '';
              document.getElementById('resume-contact').textContent = '';
              document.getElementById('resume-linkedin').href = '#';
              document.getElementById('resume-linkedin').textContent = '';
 
-             // Clear input forms (optional, location.reload is easier for full reset)
-             document.getElementById('name').value = '';
-             document.getElementById('address').value = '';
-             document.getElementById('email').value = '';
-             document.getElementById('phone').value = '';
-             document.getElementById('linkedin').value = '';
-             document.getElementById('new-section-title').value = '';
-             document.getElementById('new-section-type').value = 'structured-entry';
-             document.getElementById('edu-degree').value = '';
-             document.getElementById('edu-institution').value = '';
-             document.getElementById('edu-date').value = '';
-             document.getElementById('edu-gpa').value = '';
-             document.getElementById('edu-expected').value = '';
-             document.getElementById('skills-content').value = '';
-             document.getElementById('structured-position').value = '';
-             document.getElementById('structured-company').value = '';
-             document.getElementById('structured-location').value = '';
-             document.getElementById('structured-dates').value = '';
-             const structuredBulletsContainer = document.getElementById('structured-bullets');
-              structuredBulletsContainer.innerHTML = `<label>Details/Bullets:</label><div class="bullet-guide">Use **text** for bolding. Click "Add Bullet" for more lines.</div><div><input type="text" class="bullet-input" placeholder="Enter detail or leave blank"></div>`;
-             document.getElementById('list-item-text').value = '';
+             // Re-render resume content (which will now be empty)
+             populateResumeContent();
 
-             // Update UI elements
-             populateSectionDropdowns();
-             renderSectionRemovalList();
+             // Do NOT reset input forms or section list here, only the displayed resume content
+             // Use location.reload() for a full reset
          }
 
 
