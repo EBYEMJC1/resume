@@ -196,11 +196,11 @@
             font-size: 11px; /* Keep original resume font size */
             line-height: 1.1; /* Keep tight line height */
         }
-         /* Base styles for dynamically added sections */
-        .resume-section {
+         /* Base styles for dynamically added sections AND initial ones */
+        .resume-section { /* This now applies to all sections */
             margin-top: 10px; /* Consistent spacing between sections */
         }
-        .resume-section .section-title {
+        .resume-section .section-title { /* This now applies to all section titles */
             font-weight: bold;
             font-size: 13px;
             margin-top: 0; /* Margin handled by .resume-section */
@@ -222,16 +222,16 @@
         }
 
         /* Styles specific to content types within sections */
-         .resume-section .section-content .job-entry { /* Wrapper for structured entries */
+         .section-content .job-entry { /* Wrapper for structured entries */
             /* Use margin-top here instead of on job-title to handle spacing between entries */
             margin-top: 8px; /* Space between structured job/experience entries */
          }
-         .resume-section .section-content .job-entry:first-child {
+         .section-content .job-entry:first-child {
              margin-top: 0; /* No extra space for the first entry after the title */
          }
 
 
-         .resume-section .section-content .job-title { /* Education/Experience Structure */
+         .section-content .job-title { /* Education/Experience Structure */
             font-weight: bold;
             display: flex;
             justify-content: space-between;
@@ -239,7 +239,7 @@
             margin-bottom: 0;
             margin-top: 0; /* Margin moved to .job-entry wrapper */
         }
-        .resume-section .section-content .location { /* Education/Experience Structure */
+        .section-content .location { /* Education/Experience Structure */
             font-style: italic;
             display: flex;
             justify-content: space-between;
@@ -247,7 +247,7 @@
             margin-top: 0;
             margin-bottom: 2px;
         }
-        .resume-section .section-content ul { /* Experience/List Structure */
+        .section-content ul { /* Experience/List Structure */
             list-style-type: disc;
             margin-left: 10px;
             font-size: 11px;
@@ -255,13 +255,13 @@
             margin-top: 0;
             margin-bottom: 0;
         }
-        .resume-section .section-content li { /* List items */
+        .section-content li { /* List items */
              margin-bottom: 1px;
         }
-        .resume-section .section-content li:last-child {
+        .section-content li:last-child {
             margin-bottom: 0;
         }
-        .resume-section .section-content p { /* Skills/Paragraph Structure */
+        .section-content p { /* Skills/Paragraph Structure */
             margin: 1px 0;
             margin-top: 3px; /* Space after title */
         }
@@ -301,18 +301,18 @@
              .resume-section { margin-top: 8px; } /* Tighter section spacing */
              .resume-section .section-title { margin-bottom: 2px; padding-bottom: 1px;}
 
-             .resume-section .section-content .job-entry { margin-top: 6px;} /* Tighter space between structured entries */
-             .resume-section .section-content .job-entry:first-child { margin-top: 0;}
+             .section-content .job-entry { margin-top: 6px;} /* Tighter space between structured entries */
+             .section-content .job-entry:first-child { margin-top: 0;}
 
-             .resume-section .section-content .job-title { margin-top: 2px; margin-bottom: 0; }
-             .resume-section .section-content .location { margin-top: 0; margin-bottom: 1px; }
-             .resume-section .section-content ul { margin-left: 8px; padding-left: 4px; margin-top: 0; margin-bottom: 0; }
-             .resume-section .section-content li { margin-bottom: 0; } /* Remove space between list items */
-             .resume-section .section-content p { margin: 0; margin-top: 2px;}
+             .section-content .job-title { margin-top: 2px; margin-bottom: 0; }
+             .section-content .location { margin-top: 0; margin-bottom: 1px; }
+             .section-content ul { margin-left: 8px; padding-left: 4px; margin-top: 0; margin-bottom: 0; }
+             .section-content li { margin-bottom: 0; } /* Remove space between list items */
+             .section-content p { margin: 0; margin-top: 2px;}
 
 
              /* Ensure elements don't break across pages where possible */
-             .resume-section, .resume-section .section-content .job-entry {
+             .resume-section, .section-content .job-entry {
                  page-break-inside: avoid; /* Avoid breaking inside these blocks if possible */
              }
          }
@@ -347,9 +347,9 @@
                  </select>
                 <button onclick="addSection()">Add New Section</button>
 
-                <h4>Remove Sections</h4>
+                <h4>Remove Custom Sections</h4>
                 <ul id="section-remove-list">
-                    <!-- Removable sections will be listed here by JS -->
+                    <!-- Only user-added sections will be listed here by JS -->
                 </ul>
             </div>
 
@@ -425,7 +425,7 @@
 
              <div class="input-section">
                  <h3>Reset/Clear</h3>
-                 <p style="font-size: 10px; color:#555;">"Clear All Dynamic Content" removes all entries but keeps the initial sections. "Reset Builder" clears everything and reloads the page with defaults.</p>
+                 <p style="font-size: 10px; color:#555;">"Clear All Entries" removes all content from all sections but keeps the section titles. "Reset Builder" clears everything and reloads the page with defaults.</p>
                  <button onclick="clearResumeContent()">Clear All Entries</button>
                  <button onclick="location.reload()">Reset Builder</button>
              </div>
@@ -441,22 +441,52 @@
                     <p><span id="resume-contact"></span></p>
                     <p><a href="#" id="resume-linkedin"></a></p>
                 </div>
-                 <!-- Sections will be dynamically added here -->
-                <div id="resume-sections">
-                     <!-- Dynamic sections go here -->
-                </div>
+                 <!-- Initial sections are fixed here -->
+                 <div id="resume-sections">
+                     <div id="resume-section-education" class="resume-section" data-section-type="education-entry">
+                         <div class="section-title">Education</div>
+                         <div id="content-education" class="section-content">
+                             <!-- Education entries will be added here -->
+                         </div>
+                     </div>
+
+                     <div id="resume-section-technical-skills" class="resume-section" data-section-type="paragraph">
+                         <div class="section-title">Technical Skills</div>
+                          <div id="content-technical-skills" class="section-content">
+                              <!-- Skills paragraph will be updated here -->
+                          </div>
+                     </div>
+
+                     <div id="resume-section-experience" class="resume-section" data-section-type="structured-entry">
+                         <div class="section-title">Experience</div>
+                         <div id="content-experience" class="section-content">
+                             <!-- Experience entries will be added here -->
+                         </div>
+                     </div>
+
+                     <div id="resume-section-extracurricular" class="resume-section" data-section-type="list-item">
+                         <div class="section-title">Extracurricular Activities</div>
+                         <div id="content-extracurricular" class="section-content">
+                            <ul>
+                             <!-- Extracurricular list items will be added here -->
+                            </ul>
+                         </div>
+                     </div>
+                     <!-- Custom user-added sections will be appended here -->
+                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Data structure to hold defined sections
+        // Data structure to hold defined *custom* sections
+        // Initial sections are fixed in HTML, not in this array
         let dynamicSections = [];
 
         // Store content data separately to avoid losing it when re-rendering structure
         let resumeContentData = {
              header: {},
-             sections: {} // Store entries per section id
+             sections: {} // Store entries per section id (including initial ones)
         };
 
         // --- Helper Functions ---
@@ -525,66 +555,52 @@
              const maxLength = 180; // Approximate reasonable max length for a bullet point line
              const feedbackElement = inputElement.closest('.bullet-inputs').querySelector('.bullet-length-feedback');
 
-             if (inputElement.value.length > maxLength) {
-                 feedbackElement.textContent = `Bullet is quite long (${inputElement.value.length} chars). Consider breaking it into multiple points.`;
+             // Find the closest bullet-inputs container and check *all* inputs within it
+              const allInputs = inputElement.closest('.bullet-inputs').querySelectorAll('.bullet-input');
+              let anyTooLong = false;
+              allInputs.forEach(input => {
+                  if (input.value.length > maxLength) {
+                       anyTooLong = true;
+                  }
+              });
+
+             if (anyTooLong) {
+                 feedbackElement.textContent = `Some bullets are quite long. Consider breaking them into multiple points.`;
                  feedbackElement.classList.add('show');
              } else {
-                  // Check if all bullets are short enough before hiding
-                  const allInputs = inputElement.closest('.bullet-inputs').querySelectorAll('.bullet-input');
-                  let anyTooLong = false;
-                  allInputs.forEach(input => {
-                      if (input.value.length > maxLength) {
-                           anyTooLong = true;
-                      }
-                  });
-                  if (!anyTooLong) {
-                       feedbackElement.classList.remove('show');
-                  } else {
-                       // If some are still too long, update the message
-                       feedbackElement.textContent = `Some bullets are quite long. Consider breaking them.`;
-                       feedbackElement.classList.add('show');
-                  }
+                 feedbackElement.classList.remove('show');
              }
          }
 
 
         // --- Resume Rendering ---
+        // This function now primarily populates content within existing section divs
+        // It also handles rendering NEWLY ADDED sections
         function renderResumeSections() {
             const resumeSectionsDiv = document.getElementById('resume-sections');
-            resumeSectionsDiv.innerHTML = ''; // Clear existing sections
+            // We no longer clear all sections here, only add dynamic ones if needed
 
-            dynamicSections.forEach(section => {
-                const sectionDiv = document.createElement('div');
-                sectionDiv.classList.add('resume-section');
-                sectionDiv.id = `resume-section-${section.id}`; // Add ID for easier targeting
-
-                const titleDiv = document.createElement('div');
-                titleDiv.classList.add('section-title');
-                titleDiv.textContent = section.title;
-
-                const contentDiv = document.createElement('div');
-                contentDiv.classList.add('section-content');
-                contentDiv.id = `content-${section.id}`; // Assign ID to content div for targeting
-
-                 // Add initial structure based on type if needed (e.g., empty ul for list types)
-                 // Content will be populated later into this structure
-                 if (section.type === 'list-item') { // Extracurricular type is now just list-item type
-                     const ul = document.createElement('ul');
-                     contentDiv.appendChild(ul);
-                 }
-
-
-                sectionDiv.appendChild(titleDiv);
-                sectionDiv.appendChild(contentDiv);
-                resumeSectionsDiv.appendChild(sectionDiv);
-            });
-            // After rendering structure, re-populate content
+            // Populate content for all sections (initial + dynamic)
             populateResumeContent();
+
+            // Update the list of removable sections (only dynamic ones)
+            renderSectionRemovalList();
+            // Update dropdowns (include all sections)
+            populateSectionDropdowns();
         }
 
         // --- Populate Dropdowns in Input Forms ---
         function populateSectionDropdowns() {
             const sectionSelects = document.querySelectorAll('.section-select');
+
+            // Get *all* sections from the resume area (initial + dynamic)
+             const allResumeSections = document.querySelectorAll('#resume-sections > .resume-section');
+             const allSectionsData = Array.from(allResumeSections).map(sectionDiv => ({
+                 id: sectionDiv.id.replace('resume-section-', ''), // Extract ID
+                 title: sectionDiv.querySelector('.section-title').textContent, // Get title
+                 type: sectionDiv.dataset.sectionType // Get type from data attribute
+             }));
+
 
             sectionSelects.forEach(select => {
                 const currentSelectedId = select.value; // Remember selection
@@ -593,13 +609,13 @@
                 let relevantSections = [];
                 // Determine which sections are relevant for this dropdown based on its ID
                  if (select.id === 'edu-section-select') {
-                    relevantSections = dynamicSections.filter(s => s.type === 'education-entry');
+                    relevantSections = allSectionsData.filter(s => s.type === 'education-entry');
                  } else if (select.id === 'para-section-select') {
-                    relevantSections = dynamicSections.filter(s => s.type === 'paragraph');
+                    relevantSections = allSectionsData.filter(s => s.type === 'paragraph');
                  } else if (select.id === 'structured-section-select') {
-                    relevantSections = dynamicSections.filter(s => s.type === 'structured-entry');
+                    relevantSections = allSectionsData.filter(s => s.type === 'structured-entry');
                  } else if (select.id === 'list-section-select') {
-                    relevantSections = dynamicSections.filter(s => s.type === 'list-item');
+                    relevantSections = allSectionsData.filter(s => s.type === 'list-item');
                  }
 
                 if (relevantSections.length === 0) {
@@ -613,18 +629,17 @@
                         option.textContent = section.title;
                         select.appendChild(option);
                     });
-                     // Restore previous selection if possible
+                     // Restore previous selection if possible, otherwise default to first
                      if (currentSelectedId && relevantSections.some(s => s.id === currentSelectedId)) {
                          select.value = currentSelectedId;
-                     } else {
-                         // If previous selection invalid or not found, default to the first option
+                     } else if (relevantSections.length > 0) {
                          select.value = relevantSections[0].id;
                      }
                 }
             });
         }
 
-        // --- Section Management (Add/Remove) ---
+        // --- Section Management (Add/Remove *Custom* Sections) ---
         function addSection() {
             const titleInput = document.getElementById('new-section-title');
             const typeSelect = document.getElementById('new-section-type');
@@ -638,11 +653,14 @@
 
             // Generate a unique ID (lowercase, hyphenated)
             const baseId = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''); // Basic sanitization
-            let sectionId = baseId || `new-section-${Date.now()}`; // Fallback ID if title is empty after sanitization
+            let sectionId = baseId || `new-section-${Date.now()}`; // Fallback ID
             let counter = 1;
 
-            // Ensure ID is unique among existing sections
-            while (dynamicSections.some(s => s.id === sectionId)) {
+            // Ensure ID is unique among *all* sections (initial + dynamic)
+             const existingSectionIds = Array.from(document.querySelectorAll('#resume-sections > .resume-section'))
+                                           .map(div => div.id.replace('resume-section-', ''));
+
+            while (existingSectionIds.includes(sectionId)) {
                 sectionId = `${baseId}-${counter++}`;
                  if (counter > 100) { // Prevent infinite loops
                      sectionId = `section-${Date.now()}`;
@@ -650,14 +668,38 @@
                  }
             }
 
+            // Add to our dynamicSections array (only stores custom sections)
+            dynamicSections.push({ id: sectionId, title: title, type: type });
+             // Initialize content array for the new section in resumeContentData
+             resumeContentData.sections[sectionId] = [];
 
-            dynamicSections.push({ id: sectionId, title: title, type: type }); // Add to our data structure
-             resumeContentData.sections[sectionId] = []; // Initialize content array for the new section
+            // Dynamically create the HTML div structure for the new section
+            const resumeSectionsDiv = document.getElementById('resume-sections');
+            const sectionDiv = document.createElement('div');
+            sectionDiv.classList.add('resume-section');
+            sectionDiv.id = `resume-section-${sectionId}`;
+            sectionDiv.dataset.sectionType = type; // Store type as data attribute
+
+            const titleDiv = document.createElement('div');
+            titleDiv.classList.add('section-title');
+            titleDiv.textContent = title;
+
+            const contentDiv = document.createElement('div');
+            contentDiv.classList.add('section-content');
+            contentDiv.id = `content-${sectionId}`;
+
+             // Add initial structure based on type (e.g., empty ul for list types)
+             if (type === 'list-item') {
+                 const ul = document.createElement('ul');
+                 contentDiv.appendChild(ul);
+             }
+
+            sectionDiv.appendChild(titleDiv);
+            sectionDiv.appendChild(contentDiv);
+            resumeSectionsDiv.appendChild(sectionDiv); // Append the new section to the resume area
 
 
-            renderResumeSections(); // Re-render the resume structure
-            populateSectionDropdowns(); // Update dropdowns
-            renderSectionRemovalList(); // Update the remove list
+            renderResumeSections(); // Update UI elements (removal list, dropdowns, content)
 
             // Clear form
             titleInput.value = '';
@@ -667,6 +709,7 @@
             const removeList = document.getElementById('section-remove-list');
             removeList.innerHTML = ''; // Clear list
 
+            // Iterate through dynamicSections (only custom sections)
             dynamicSections.forEach(section => {
                 const li = document.createElement('li');
                 li.textContent = section.title;
@@ -681,29 +724,23 @@
         }
 
         function removeSection(id) {
-             // Find the index of the section with the given ID
+             // Find the index of the section with the given ID in dynamicSections
              const index = dynamicSections.findIndex(section => section.id === id);
 
              if (index !== -1) {
-                 // Confirm removal, especially for initial sections
-                 const isInitialSection = ['education', 'technical-skills', 'experience', 'extracurricular'].includes(id);
-                 if (isInitialSection) {
-                      const confirmRemove = confirm(`Are you sure you want to remove the "${dynamicSections[index].title}" section? This cannot be undone.`);
-                      if (!confirmRemove) {
-                          return; // Stop removal if not confirmed
-                      }
-                 }
-
-                 // Remove the section from the array
+                 // Remove the section from the dynamicSections array
                  dynamicSections.splice(index, 1);
 
-                 // Remove its content data
+                 // Remove its content data from resumeContentData
                  delete resumeContentData.sections[id];
 
-                 // Re-render everything
-                 renderResumeSections();
-                 populateSectionDropdowns();
-                 renderSectionRemovalList(); // Update the remove list
+                 // Remove the corresponding HTML div from the resume area
+                 const sectionDiv = document.getElementById(`resume-section-${id}`);
+                 if (sectionDiv) {
+                     sectionDiv.remove();
+                 }
+
+                 renderResumeSections(); // Update UI elements (removal list, dropdowns, content)
              }
         }
 
@@ -711,9 +748,13 @@
 
         // Add Education Entry
         function addEducationEntry(sectionId, data) {
-             const section = dynamicSections.find(s => s.id === sectionId);
-             if (!section || section.type !== 'education-entry') {
+            // Get the section type from the HTML element's data attribute
+            const sectionDiv = document.getElementById(`resume-section-${sectionId}`);
+            const sectionType = sectionDiv ? sectionDiv.dataset.sectionType : null;
+
+             if (!sectionDiv || sectionType !== 'education-entry') {
                   console.error(`Section ${sectionId} not found or not of type 'education-entry'`);
+                  alert(`Cannot add Education entry: Target section not found or is not an Education section.`);
                   return;
              }
 
@@ -731,6 +772,13 @@
              }
              resumeContentData.sections[sectionId].push(data);
              populateResumeContent(); // Re-render content (which now includes sorting)
+
+             // Clear form
+             document.getElementById('edu-degree').value = '';
+             document.getElementById('edu-institution').value = '';
+             document.getElementById('edu-date').value = '';
+             document.getElementById('edu-gpa').value = '';
+             document.getElementById('edu-expected').value = '';
         }
 
          function addEducationEntryForm() {
@@ -755,9 +803,12 @@
          // Set Paragraph Content (for skills or custom paragraph sections)
          // This function doesn't involve dates or sorting multiple entries
         function setParagraphContent(sectionId, content) {
-            const section = dynamicSections.find(s => s.id === sectionId);
-             if (!section || section.type !== 'paragraph') {
+             const sectionDiv = document.getElementById(`resume-section-${sectionId}`);
+             const sectionType = sectionDiv ? sectionDiv.dataset.sectionType : null;
+
+             if (!sectionDiv || sectionType !== 'paragraph') {
                   console.error(`Section ${sectionId} not found or not of type 'paragraph'`);
+                  alert(`Cannot set Paragraph content: Target section not found or is not a Paragraph section.`);
                   return;
              }
              // Paragraph sections typically only have ONE paragraph
@@ -778,9 +829,12 @@
 
         // Add Structured Entry (for experience or custom structured sections)
          function addStructuredEntry(sectionId, data) {
-             const section = dynamicSections.find(s => s.id === sectionId);
-             if (!section || section.type !== 'structured-entry') {
+             const sectionDiv = document.getElementById(`resume-section-${sectionId}`);
+             const sectionType = sectionDiv ? sectionDiv.dataset.sectionType : null;
+
+             if (!sectionDiv || sectionType !== 'structured-entry') {
                   console.error(`Section ${sectionId} not found or not of type 'structured-entry'`);
+                  alert(`Cannot add Structured entry: Target section not found or is not a Structured Entry section.`);
                   return;
              }
 
@@ -798,6 +852,26 @@
              }
              resumeContentData.sections[sectionId].push(data);
              populateResumeContent(); // Re-render content (which now includes sorting)
+
+             // Clear form and reset bullets
+             document.getElementById('structured-position').value = '';
+             document.getElementById('structured-company').value = '';
+             document.getElementById('structured-location').value = '';
+             document.getElementById('structured-dates').value = '';
+             const structuredBulletsContainer = document.getElementById('structured-bullets');
+             structuredBulletsContainer.innerHTML = `
+                 <label>Details/Bullets:</label>
+                 <div class="bullet-guide">
+                     Use **text** for bolding.<br>Write achievement-oriented bullets starting with action verbs.<br>Include quantifiable results (numbers, percentages) where possible.<br>Consider the STAR method (Situation, Task, Action, Result) or How-What-Why.<br>Keep bullets concise (ideally 1-2 lines).<br>Click "Add Another Bullet" for more lines.
+                 </div>
+                 <div class="bullet-item">
+                     <input type="text" class="bullet-input" placeholder="Enter bullet point">
+                     <button class="remove-bullet-button" type="button" onclick="removeBulletItem(this)">x</button>
+                 </div>
+                 <p class="bullet-length-feedback"></p>
+             `;
+              // Re-add event listener to the *new* bullet input
+             structuredBulletsContainer.querySelector('.bullet-input').addEventListener('input', function() { checkBulletLength(this); });
          }
 
          function addStructuredEntryForm() {
@@ -822,34 +896,17 @@
 
              const data = { position, company, location, dates, bullets };
              addStructuredEntry(sectionId, data); // Call the function that handles adding and validation
-
-             // Clear form and reset bullets
-             document.getElementById('structured-position').value = '';
-             document.getElementById('structured-company').value = '';
-             document.getElementById('structured-location').value = '';
-             document.getElementById('structured-dates').value = '';
-             const structuredBulletsContainer = document.getElementById('structured-bullets');
-             structuredBulletsContainer.innerHTML = `
-                 <label>Details/Bullets:</label>
-                 <div class="bullet-guide">
-                     Use **text** for bolding.<br>Write achievement-oriented bullets starting with action verbs.<br>Include quantifiable results (numbers, percentages) where possible.<br>Consider the STAR method (Situation, Task, Action, Result) or How-What-Why.<br>Keep bullets concise (ideally 1-2 lines).<br>Click "Add Another Bullet" for more lines.
-                 </div>
-                 <div class="bullet-item">
-                     <input type="text" class="bullet-input" placeholder="Enter bullet point">
-                     <button class="remove-bullet-button" type="button" onclick="removeBulletItem(this)">x</button>
-                 </div>
-                 <p class="bullet-length-feedback"></p>
-             `;
-              // Re-add event listener to the *new* bullet input
-             structuredBulletsContainer.querySelector('.bullet-input').addEventListener('input', function() { checkBulletLength(this); });
          }
 
 
         // Add List Item (for extracurricular or custom list sections)
          function addListItem(sectionId, text) {
-             const section = dynamicSections.find(s => s.id === sectionId);
-             if (!section || section.type !== 'list-item') {
+             const sectionDiv = document.getElementById(`resume-section-${sectionId}`);
+             const sectionType = sectionDiv ? sectionDiv.dataset.sectionType : null;
+
+             if (!sectionDiv || sectionType !== 'list-item') {
                   console.error(`Section ${sectionId} not found or not of type 'list-item'`);
+                  alert(`Cannot add List item: Target section not found or is not a List Item section.`);
                   return;
              }
 
@@ -867,6 +924,9 @@
              }
              resumeContentData.sections[sectionId].push(data);
              populateResumeContent(); // Re-render content (which now includes sorting)
+
+            // Clear form
+            document.getElementById('list-item-text').value = '';
          }
 
          function addListItemForm() {
@@ -880,9 +940,6 @@
             }
 
             addListItem(sectionId, text); // Call the function that handles adding and validation
-
-            // Clear form
-            document.getElementById('list-item-text').value = '';
          }
 
         // Dynamic Bullet Input Helper
@@ -909,7 +966,7 @@
             removeButton.onclick = function() {
                 div.remove(); // Remove the wrapper div
                  // Re-check lengths after removing an input
-                 checkBulletLength(container.querySelector('.bullet-input')); // Check any remaining input
+                 checkBulletLength(container.querySelector('.bullet-length-feedback')); // Pass feedback element to re-check overall container
             };
 
             div.appendChild(input);
@@ -924,34 +981,41 @@
              const container = bulletItemDiv.closest('.bullet-inputs');
              bulletItemDiv.remove();
              // Re-check lengths after removal
-              const remainingInputs = container.querySelectorAll('.bullet-input');
-              if (remainingInputs.length > 0) {
-                 checkBulletLength(remainingInputs[0]); // Check the first remaining input
-              } else {
-                  // If no inputs left, hide feedback
-                  container.querySelector('.bullet-length-feedback').classList.remove('show');
-              }
+              checkBulletLength(container.querySelector('.bullet-length-feedback')); // Pass feedback element to re-check overall container
          }
 
 
         // --- Populate Resume Content into Rendered Sections ---
         // This function reads the data from resumeContentData, SORTS IT, and builds the HTML inside the section content divs
         function populateResumeContent() {
-             dynamicSections.forEach(section => {
-                 const contentDiv = document.getElementById(`content-${section.id}`);
+             // Get all section IDs that have content stored
+             const sectionIdsWithContent = Object.keys(resumeContentData.sections);
+
+             sectionIdsWithContent.forEach(sectionId => {
+                 const contentDiv = document.getElementById(`content-${sectionId}`);
                  if (!contentDiv) {
-                     console.error(`Content div not found for section: ${section.id}`);
-                     return; // Section container not found (shouldn't happen if structure is rendered)
+                     console.error(`Content div not found for section: ${sectionId}`);
+                     return; // Section container not found
                  }
 
                  // Clear previous content inside this section's content div
                  contentDiv.innerHTML = '';
 
-                 let entries = resumeContentData.sections[section.id] || [];
+                 // Get the section type from the HTML element's data attribute
+                 const sectionDiv = document.getElementById(`resume-section-${sectionId}`);
+                 const sectionType = sectionDiv ? sectionDiv.dataset.sectionType : null;
+
+                 if (!sectionType) {
+                     console.error(`Section type not found for section: ${sectionId}`);
+                     return;
+                 }
+
+
+                 let entries = resumeContentData.sections[sectionId] || [];
 
                  // --- Sorting Logic ---
                  // Only sort sections that have a sortable type
-                 if (['education-entry', 'structured-entry', 'list-item'].includes(section.type)) {
+                 if (['education-entry', 'structured-entry', 'list-item'].includes(sectionType)) {
                      entries.sort((a, b) => {
                          const dateA = a.sortDate;
                          const dateB = b.sortDate;
@@ -969,7 +1033,7 @@
 
 
                  // Now render the sorted entries
-                 switch (section.type) {
+                 switch (sectionType) {
                      case 'education-entry':
                           entries.forEach(entry => {
                              const jobEntryDiv = document.createElement('div'); // Wrap entry for potential print breaking
@@ -1035,14 +1099,20 @@
                          break;
 
                      case 'list-item': // Extracurricular, Awards, etc.
-                         const ul = contentDiv.querySelector('ul'); // Find the ul already created during structure rendering
-                         if (ul) {
-                             entries.forEach(entry => { // entry is now an object { text: ..., sortDate: ... }
-                                  const li = document.createElement('li');
-                                  li.innerHTML = processBolding(entry.text || ''); // Use the original text
-                                  ul.appendChild(li);
-                             });
+                         // Find the ul already created during structure rendering (if it exists)
+                         let ul = contentDiv.querySelector('ul');
+                         // Create ul if it doesn't exist (e.g., for a dynamically added list-item section)
+                         if (!ul) {
+                             ul = document.createElement('ul');
+                             contentDiv.appendChild(ul);
                          }
+                         ul.innerHTML = ''; // Clear existing list items
+
+                         entries.forEach(entry => { // entry is now an object { text: ..., sortDate: ... }
+                              const li = document.createElement('li');
+                              li.innerHTML = processBolding(entry.text || ''); // Use the original text
+                              ul.appendChild(li);
+                         });
                          break;
                  }
              });
@@ -1051,22 +1121,14 @@
 
         // --- Initial Setup ---
         function initializeResume() {
-            // Define initial sections with unique IDs and types
-            // These IDs match the original resume structure
-            dynamicSections = [
-                { id: 'education', title: 'Education', type: 'education-entry' },
-                { id: 'technical-skills', title: 'Technical Skills', type: 'paragraph' },
-                { id: 'experience', title: 'Experience', type: 'structured-entry' },
-                { id: 'extracurricular', title: 'Extracurricular Activities', type: 'list-item' } // Changed type to list-item
-            ];
+            // dynamicSections starts empty - it only holds custom sections
 
-            // Initialize content data structure for defined sections
-             dynamicSections.forEach(section => {
-                 resumeContentData.sections[section.id] = [];
-             });
+            // Initial sections exist in HTML. We just need to initialize their content arrays.
+             resumeContentData.sections['education'] = [];
+             resumeContentData.sections['technical-skills'] = [];
+             resumeContentData.sections['experience'] = [];
+             resumeContentData.sections['extracurricular'] = [];
 
-            // Render the basic section structure
-            renderResumeSections(); // This will call populateResumeContent() implicitly the first time
 
             // --- Populate Input Forms with Default Values / Placeholders ---
             // Header
@@ -1086,15 +1148,15 @@
             // Technical Skills
              document.getElementById('skills-content').value = 'Microscopy, Aseptic Technique, Micropipetting, Spectrophotometry, Gel Electrophoresis, Capsule Stain, Python, Bash, C++ (novice), x86 (novice), Data Analysis, Procedural Adherence, Customer Service, Communication.';
 
-            // Structured Entry (Experience default examples are already in HTML placeholders)
+            // Structured Entry (Experience default examples are in HTML placeholders)
             // Add event listeners to the default bullet inputs for length check
              document.querySelectorAll('#structured-bullets .bullet-input').forEach(input => {
                 input.addEventListener('input', function() { checkBulletLength(this); });
-                checkBulletLength(input); // Check on load in case default is long
+                // checkBulletLength(input); // Optional: Check on load if default is long - might be distracting
              });
 
 
-            // List Item (Extracurricular default example is already in HTML placeholder)
+            // List Item (Extracurricular default example is in HTML placeholder)
 
             // --- Populate Resume Preview with Default Content ---
             // This simulates adding the original resume content using the new data structure/functions
@@ -1118,7 +1180,7 @@
              const defaultExperienceEntries = [
                  { position: 'Crew', company: 'Chipotle', location: '22245 El Paseo, Rancho Santa Margarita, CA', dates: 'August 2023 - Present', bullets: ['Ensured high order accuracy by implementing a step-by-step confirmation process and verbally verifying item details, consistently limiting errors to fewer than 4 per 5-hour shift', 'Utilized the cash register to charge 10–20 customers per shift, **double-checking totals** to prevent overcharging and **ensuring extras** like cups and chips were included when ordered', 'Fostered safe food consumption by strictly following detailed operational and sanitation protocols during 100% of my closing shifts, reducing potential contamination risks'] },
                  { position: 'Supplemental Instruction Leader (Computer Science)', company: 'CSUF', location: '800 N State College Blvd, Fullerton, CA', dates: 'August 2022 - Present', bullets: ['Tailored communication strategies, incorporating **analogies & rephrasing**, to simplify complex technical concepts related to hybrid x86-64 assembly with C++ enhancing comprehension', 'Boosted student performance by **adapting explanations** through active questioning and observation, leading SI attendees to score 1–1.5x higher than non-attendees'] },
-                 { position: 'CREP Student Researcher', company: 'CSUF', location: '800 N State College Blvd, Fullerton, CA', dates: 'August 2022 - May 2023', bullets: ['Managed and **cleaned** a complex health-related dataset (N=62,482) from the Tennessee Cancer Registry for localized malignant breast cancer (LMBC)', 'Reviewed 5 papers on various cancers to **identify demographic and clinical variables** consistently linked to outcomes (e.g., age, marital status, insurance type)', 'Performed quantitative analysis, including **Chi-square tests and multivariate logistic regression**, on cleaned health data'] },
+                 { position: 'CREP Student Researcher', company: 'CSUF', location: '800 N State College Blvd, Fullerton, CA', dates: 'August 2022 - May 2023', bullets: ['Managed and **cleaned** a complex health-related dataset (N=62,482) from the Tennessee Cancer Registry for localized malignant breast cancer (LMBC)', 'Reviewed 5 papers on various cancers to **identify demographic and clinical variables** consistently linked to outcomes (e.g., age, marital status, insurance type)'], type: 'structured-entry' },
                  { position: 'DIA Jumpstart Student Researcher', company: 'University of Southern California', location: '', dates: 'June 2022 - August 2022', bullets: ['Employed a bash script to process and trim RNA sequencing datasets, using **Seqtk v1.3** removing 5 base pairs iteratively from the 3\' end of reads until a minimum length of 36 bp', 'Explored **read length effect** through use of 12 samples finding that read length from 36 to 76 bp raised HLA caller accuracy from 63% to 77%, except for PHLAT, seq2HLA, and HLAMiner'] },
                   { position: 'CIC-PCUBED', company: 'CSUF', location: '800 N State College Blvd, Fullerton, CA', dates: 'June 2022 - August 2022', bullets: ['Collaborated on a Python project to identify cointegrated stocks for financial analysis'] },
                   { position: 'Supplemental Instruction Leader (Biology)', company: 'CSUF', location: '800 N State College Blvd, Fullerton, CA', dates: 'August 2019 - May 2022', bullets: ['Facilitated 2 weekly SI sessions for BIOL 151, a foundational course covering topics such as cellular structures, metabolic pathways, and gene regulation.', 'Supported increased course pass rates, as students attending SI sessions have an 83% pass rate in gateway courses, compared to 76% for those who do not participate'] },
@@ -1136,15 +1198,15 @@
                  'CSUF Chapter of ACM Member | August 2022 – May 2023',
                  'Example Older Activity | 2017 - 2018' // Add an older one to test sorting
              ];
-             defaultExtracurricularItems.forEach(itemText => addListItem('extracurricular', itemText)); // Pass text, not object
+             defaultExtracurricularItems.forEach(itemText => addListItem('extracurricular', itemText));
 
-            // Update dropdowns and remove list after initial population
+            // Update UI elements (dropdowns and removable list) based on initial state
             populateSectionDropdowns();
-            renderSectionRemovalList();
+            renderSectionRemovalList(); // This list will be empty initially
         }
 
         // --- Clear Content ---
-        // This function now only clears the *entries* within the existing sections
+        // This function clears the *entries* within all existing sections
         function clearResumeContent() {
              // Clear content data for all sections
              for (const sectionId in resumeContentData.sections) {
@@ -1159,7 +1221,7 @@
              document.getElementById('resume-linkedin').href = '#';
              document.getElementById('resume-linkedin').textContent = '';
 
-             // Re-render resume content (which will now be empty)
+             // Re-render resume content (which will now be empty for all sections)
              populateResumeContent();
 
              // Do NOT reset input forms or section list here, only the displayed resume content
