@@ -1,3 +1,5 @@
+--- START OF FILE index3.html ---
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -94,8 +96,8 @@
         .resume-area .header h1 { margin: 0; font-size: 16px; }
         .resume-area .header p { margin: 1px 0; font-size: 11px; }
 
-        .resume-section .section-content .job-entry, .resume-section .section-content .list-entry-item { margin-top: 8px; position: relative; padding-right: 55px; }
-        .resume-section .section-content .list-entry-item { margin-top: 2px; margin-bottom: 1px;}
+        .resume-section .section-content .job-entry, .resume-section .section-content .list-entry-item { margin-top: 8px; position: relative; padding-right: 95px; /* Increased for more buttons */ }
+        .resume-section .section-content .list-entry-item { margin-top: 2px; margin-bottom: 1px; padding-right: 55px; /* List items might not get move/copy yet */ }
         .resume-section .section-content .job-entry:first-child, .resume-section .section-content .list-entry-item:first-child { margin-top: 0; }
         .entry-controls { position: absolute; top: 0; right: 0; display: flex; gap: 3px; z-index: 10; }
         .entry-control-button { background: #f0f0f0; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; font-size: 10px; padding: 1px 3px; line-height: 1; }
@@ -130,11 +132,25 @@
 
         .resume-section .section-content p { margin: 1px 0; margin-top: 3px; }
 
+        /* Move/Copy Modal Styles */
+        #move-copy-modal {
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white; border: 1px solid #ccc;
+            padding: 20px; z-index: 1000; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            min-width: 300px; border-radius: 5px;
+        }
+        #move-copy-modal h4 { margin-top: 0; }
+        #move-copy-modal label { font-weight: normal; font-size: 13px; margin-bottom: 8px; }
+        #move-copy-modal select { width: 100%; margin-bottom: 15px; padding: 8px; font-size: 13px; }
+        #move-copy-modal button { font-size: 13px; padding: 8px 15px; }
+
+
         /* Print Styles */
         @media print {
              body { font-size: 10px; line-height: 1; display: block; }
              .builder-container { display: block; width: 100%; max-width: 100%; padding: 0; margin: 0; }
-             .input-area { display: none; }
+             .input-area, #move-copy-modal { display: none !important; }
              .resume-area { width: 100%; border-left: none; padding-left: 0; overflow-y: visible; }
              .resume-area .container { font-size: 10px; line-height: 1; }
              .entry-controls, .bullet-control-btn { display: none !important; }
@@ -251,10 +267,20 @@
 </div>
 </div>
 
+<!-- Move/Copy Modal -->
+<div id="move-copy-modal">
+    <h4 id="move-copy-modal-title">Move/Copy Entry</h4>
+    <label for="move-copy-target-section">Select target section:</label>
+    <select id="move-copy-target-section"></select>
+    <button id="move-copy-confirm">Confirm</button>
+    <button id="move-copy-cancel" class="cancel-button">Cancel</button>
+</div>
+
 <script>
     let dynamicSections = [];
     let resumeContentData = { header: {}, sections: {} };
     let editingContext = null;
+    let moveCopyContext = null; // { sourceSectionId, entryIndex, actionType, entryType }
 
 
     function processBolding(text) { if (typeof text !== 'string') return text; return text.replace(/\*\*(.*?)\*\*/gi, '<strong>$1</strong>');}
@@ -267,7 +293,7 @@
             const sectionDiv = document.createElement('div'); sectionDiv.classList.add('resume-section'); sectionDiv.id = `resume-section-${section.id}`;
             const titleDiv = document.createElement('div'); titleDiv.classList.add('section-title'); titleDiv.textContent = section.title;
             const contentDiv = document.createElement('div'); contentDiv.classList.add('section-content'); contentDiv.id = `content-${section.id}`;
-            if (section.type === 'list-item' || section.type === 'structured-entry') {
+            if (section.type === 'list-item' || section.type === 'structured-entry') { // list-item needs UL for its list-entry-item > li
                 const ul = document.createElement('ul'); contentDiv.appendChild(ul);
             }
             sectionDiv.appendChild(titleDiv); sectionDiv.appendChild(contentDiv);
@@ -492,9 +518,17 @@
         const bulletLiElement = target.closest('li[data-bullet-path]');
 
         if (target.classList.contains('entry-control-button') && entryElement) {
-            const sectionId = entryElement.dataset.sectionId; const entryIndex = parseInt(entryElement.dataset.entryIndex); const action = target.dataset.action;
-            if (action === 'edit') loadEntryForEditing(sectionId, entryIndex);
-            else if (action === 'remove') if (confirm('Remove entry?')) removeResumeEntry(sectionId, entryIndex);
+            const sectionId = entryElement.dataset.sectionId;
+            const entryIndex = parseInt(entryElement.dataset.entryIndex);
+            const action = target.dataset.action;
+
+            if (action === 'edit') {
+                loadEntryForEditing(sectionId, entryIndex);
+            } else if (action === 'remove') {
+                if (confirm('Remove entry?')) removeResumeEntry(sectionId, entryIndex);
+            } else if (action === 'move-entry' || action === 'copy-entry') {
+                openMoveCopyModal(sectionId, entryIndex, action);
+            }
         } else if (target.classList.contains('bullet-control-btn') && bulletLiElement && entryElement) {
             const sectionId = entryElement.dataset.sectionId; const entryIndex = parseInt(entryElement.dataset.entryIndex);
             const bulletPath = JSON.parse(bulletLiElement.dataset.bulletPath); const action = target.dataset.action;
@@ -564,14 +598,34 @@
 
     function populateResumeContent() {
         dynamicSections.forEach(section => {
-            const contentDiv = document.getElementById(`content-${section.id}`); if (!contentDiv) return; contentDiv.innerHTML = '';
-            if ((section.type === 'list-item' || section.type === 'structured-entry') && !contentDiv.querySelector('ul')) { contentDiv.appendChild(document.createElement('ul')); }
+            const contentDiv = document.getElementById(`content-${section.id}`); if (!contentDiv) return;
+            let ulForListOrStructured = contentDiv.querySelector('ul');
+            if ((section.type === 'list-item' || section.type === 'structured-entry') && !ulForListOrStructured) {
+                ulForListOrStructured = document.createElement('ul');
+                contentDiv.appendChild(ulForListOrStructured);
+            } else if (section.type !== 'list-item' && section.type !== 'structured-entry') { // For paragraph, clear existing content
+                contentDiv.innerHTML = '';
+            }
+            if (ulForListOrStructured && (section.type === 'list-item' || section.type === 'structured-entry')) {
+                 ulForListOrStructured.innerHTML = ''; // Clear previous list items to avoid duplication if structure changes.
+            }
+
+
             let entries = resumeContentData.sections[section.id] || [];
             if (['education-entry', 'structured-entry', 'list-item'].includes(section.type)) {
                 entries.sort((a, b) => (a.sortDate || 0) instanceof Date && (b.sortDate || 0) instanceof Date ? b.sortDate.getTime() - a.sortDate.getTime() : 0);
             }
+
             entries.forEach((entry, entryIdx) => {
-                const entryControlsHtml = `<div class="entry-controls"><button class="entry-control-button" data-action="edit" title="Edit">✏️</button><button class="entry-control-button" data-action="remove" title="Remove">❌</button></div>`;
+                let specificEntryControlsHtml = `<div class="entry-controls"><button class="entry-control-button" data-action="edit" title="Edit">✏️</button><button class="entry-control-button" data-action="remove" title="Remove">❌</button>`;
+                if (section.type === 'structured-entry' || section.type === 'education-entry') {
+                    specificEntryControlsHtml += `
+                        <button class="entry-control-button" data-action="move-entry" title="Move Entry">➔</button>
+                        <button class="entry-control-button" data-action="copy-entry" title="Copy Entry">❏</button>
+                    `;
+                }
+                specificEntryControlsHtml += `</div>`;
+
                 let entryWrapper;
                 switch (section.type) {
                     case 'education-entry':
@@ -579,7 +633,7 @@
                         let eduTitle = `<span>${processBolding(entry.degree||'')}</span><span>${processBolding(entry.date||'')}</span>`;
                         let eduLoc = `<span>${processBolding(entry.institution||'')}</span><span>${processBolding(entry.gpa?'GPA: '+entry.gpa:'')}</span>`;
                         entryWrapper.innerHTML = `<div class="job-title">${eduTitle}</div><div class="location">${eduLoc}</div>${entry.expected?`<p>${processBolding(entry.expected)}</p>`:''}`;
-                        entryWrapper.insertAdjacentHTML('afterbegin', entryControlsHtml); contentDiv.appendChild(entryWrapper);
+                        entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml); contentDiv.appendChild(entryWrapper); // Appended to contentDiv directly
                         break;
                     case 'structured-entry':
                         entryWrapper = document.createElement('div'); entryWrapper.classList.add('job-entry'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx;
@@ -587,7 +641,7 @@
                         let strLoc = `<span>${processBolding(entry.company||'')}</span><span>${processBolding(entry.location||'')}</span>`;
                         entryWrapper.innerHTML = `<div class="job-title">${strTitle}</div><div class="location">${strLoc}</div>`;
                         if (entry.bullets?.length > 0) {
-                            const ul = document.createElement('ul');
+                            const ulBullets = document.createElement('ul'); // This UL is for bullets within the job-entry
                             entry.bullets.forEach((bulletItem, mainIdx) => {
                                 const li = document.createElement('li'); li.dataset.bulletPath = JSON.stringify([mainIdx]);
                                 const bulletText = typeof bulletItem === 'string' ? bulletItem : bulletItem.text;
@@ -601,28 +655,164 @@
                                     });
                                     li.appendChild(subUl);
                                 }
-                                ul.appendChild(li);
+                                ulBullets.appendChild(li);
                             });
-                            entryWrapper.appendChild(ul);
+                            entryWrapper.appendChild(ulBullets);
                         }
-                        entryWrapper.insertAdjacentHTML('afterbegin', entryControlsHtml); contentDiv.appendChild(entryWrapper);
+                        entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml); contentDiv.appendChild(entryWrapper); // Appended to contentDiv directly
                         break;
                     case 'paragraph':
                         const p = document.createElement('p'); p.innerHTML = processBolding(entry || ''); contentDiv.appendChild(p);
                         break;
                     case 'list-item':
-                        const ulForList = contentDiv.querySelector('ul');
+                        // const ulForList = contentDiv.querySelector('ul'); // This was problematic
+                        ulForListOrStructured = contentDiv.querySelector('ul'); // Use the one ensured at the top of the loop
                         entryWrapper = document.createElement('div'); entryWrapper.classList.add('list-entry-item'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx;
                         const liElem = document.createElement('li'); liElem.innerHTML = processBolding(entry.text || '');
-                        entryWrapper.appendChild(liElem); entryWrapper.insertAdjacentHTML('afterbegin', entryControlsHtml);
-                        if(ulForList) ulForList.appendChild(entryWrapper);
+                        entryWrapper.appendChild(liElem); entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml);
+                        if(ulForListOrStructured) ulForListOrStructured.appendChild(entryWrapper);
                         break;
                 }
             });
+             // If contentDiv for structured or education entry is meant to be a list, then items should be li.
+             // My current structure appends divs.job-entry. If they need to be LI of the main contentDiv UL, this needs rework.
+             // For now, structured/education entries are direct children of contentDiv, not LIs of its UL.
+             // List-item uses its ulForListOrStructured to append its items.
+             // The change: For structured-entry, if it's supposed to be a list of jobs, each job-entry div itself should be an LI
+             // or the `ulForListOrStructured` for structured-entry is not used.
+             // The initial renderResumeSections adds a UL for structured-entry, but it's not used.
+             // Correcting: education-entry and structured-entry don't inherently need a top-level UL in their contentDiv.
+             // They *contain* ULs for bullets if applicable. List-item *is* a list.
+
+             if (section.type === 'education-entry' || section.type === 'structured-entry') {
+                // These types don't use the contentDiv's direct UL for their main entries.
+                // The UL created in renderResumeSections for these types might be unused.
+                // Let's ensure contentDiv is cleared if it's not supposed to have a UL.
+                if (contentDiv.firstChild && contentDiv.firstChild.tagName === 'UL' && entries.length > 0 && contentDiv.querySelectorAll('.job-entry').length > 0) {
+                    // If job entries were added directly to contentDiv, and there's an empty UL, remove it.
+                    const directUl = contentDiv.querySelector(':scope > ul');
+                    if (directUl && directUl.children.length === 0) {
+                         // directUl.remove(); // This logic might be too aggressive, let's simplify renderResumeSections.
+                    }
+                }
+             }
         });
     }
+    // Correction for renderResumeSections to avoid unused UL for structured/education
+    // In renderResumeSections:
+    // if (section.type === 'list-item') { // ONLY list-item needs a direct UL in contentDiv for its items
+    //     const ul = document.createElement('ul'); contentDiv.appendChild(ul);
+    // }
+    // This will be applied in the script below.
+
+
+    function openMoveCopyModal(sourceSectionId, entryIndex, actionType) {
+        const sourceSection = dynamicSections.find(s => s.id === sourceSectionId);
+        if (!sourceSection) return;
+
+        const entryType = sourceSection.type;
+        moveCopyContext = { sourceSectionId, entryIndex, actionType, entryType };
+
+        const modal = document.getElementById('move-copy-modal');
+        const modalTitle = document.getElementById('move-copy-modal-title');
+        const targetSelect = document.getElementById('move-copy-target-section');
+        const confirmButton = document.getElementById('move-copy-confirm');
+
+        modalTitle.textContent = actionType === 'move-entry' ? 'Move Entry To...' : 'Copy Entry To...';
+        targetSelect.innerHTML = ''; // Clear previous options
+
+        const compatibleSections = dynamicSections.filter(
+            s => s.type === entryType && s.id !== sourceSectionId
+        );
+
+        if (compatibleSections.length === 0) {
+            const option = document.createElement('option');
+            option.value = "";
+            option.textContent = "No other compatible sections";
+            targetSelect.appendChild(option);
+            targetSelect.disabled = true;
+            confirmButton.disabled = true;
+        } else {
+            compatibleSections.forEach(section => {
+                const option = document.createElement('option');
+                option.value = section.id;
+                option.textContent = section.title;
+                targetSelect.appendChild(option);
+            });
+            targetSelect.disabled = false;
+            confirmButton.disabled = false;
+        }
+        modal.style.display = 'block';
+    }
+
+    function closeMoveCopyModal() {
+        const modal = document.getElementById('move-copy-modal');
+        modal.style.display = 'none';
+        moveCopyContext = null;
+    }
+
+    function performMoveCopyEntry() {
+        if (!moveCopyContext) return;
+
+        const { sourceSectionId, entryIndex, actionType } = moveCopyContext;
+        const targetSectionId = document.getElementById('move-copy-target-section').value;
+
+        if (!targetSectionId) {
+            alert("Please select a target section.");
+            return;
+        }
+
+        const sourceSectionData = resumeContentData.sections[sourceSectionId];
+        if (!sourceSectionData || sourceSectionData[entryIndex] === undefined) {
+            console.error("Source entry not found for move/copy operation.");
+            closeMoveCopyModal();
+            return;
+        }
+
+        // Deep copy the entry data
+        let entryToProcess = JSON.parse(JSON.stringify(sourceSectionData[entryIndex]));
+
+        // Add to target section
+        if (!resumeContentData.sections[targetSectionId]) {
+            resumeContentData.sections[targetSectionId] = [];
+        }
+        resumeContentData.sections[targetSectionId].push(entryToProcess);
+
+        // If moving, remove from source section
+        if (actionType === 'move-entry') {
+            sourceSectionData.splice(entryIndex, 1);
+        }
+
+        populateResumeContent(); // This will re-sort and re-render everything
+        closeMoveCopyModal();
+    }
+
 
     function initializeResume() {
+        // Corrected renderResumeSections logic to only add UL for list-item type
+        // This is a redefinition of the global renderResumeSections for clarity of the fix
+        window.renderResumeSections = function() {
+            const resumeSectionsDiv = document.getElementById('resume-sections');
+            resumeSectionsDiv.innerHTML = '';
+            dynamicSections.forEach(section => {
+                const sectionDiv = document.createElement('div'); sectionDiv.classList.add('resume-section'); sectionDiv.id = `resume-section-${section.id}`;
+                const titleDiv = document.createElement('div'); titleDiv.classList.add('section-title'); titleDiv.textContent = section.title;
+                const contentDiv = document.createElement('div'); contentDiv.classList.add('section-content'); contentDiv.id = `content-${section.id}`;
+                
+                // ONLY list-item needs a direct UL in contentDiv for its list-entry-item wrappers
+                if (section.type === 'list-item') {
+                    const ul = document.createElement('ul'); contentDiv.appendChild(ul);
+                }
+                // Structured-entry and Education-entry manage their own bullet ULs internally if needed.
+                // Paragraph doesn't use a UL.
+
+                sectionDiv.appendChild(titleDiv); sectionDiv.appendChild(contentDiv);
+                resumeSectionsDiv.appendChild(sectionDiv);
+            });
+            populateResumeContent(); // populateResumeContent will handle filling these
+        }
+
+
         dynamicSections = [
             { id: 'education', title: 'Education', type: 'education-entry' },
             { id: 'technical-skills', title: 'Technical Skills', type: 'paragraph' },
@@ -630,7 +820,7 @@
             { id: 'extracurricular', title: 'Extracurricular Activities', type: 'list-item' }
         ];
         dynamicSections.forEach(section => { resumeContentData.sections[section.id] = []; });
-        renderResumeSections();
+        renderResumeSections(); // Calls the corrected version
 
         document.getElementById('name').value = 'Sara Sadek';
         document.getElementById('address').value = 'Rancho Santa Margarita, CA 92688';
@@ -665,6 +855,10 @@
 
         populateSectionDropdowns(); renderSectionRemovalList();
         document.getElementById('resume-sections').addEventListener('click', handleResumeInteraction);
+
+        // Add event listeners for the move/copy modal
+        document.getElementById('move-copy-confirm').addEventListener('click', performMoveCopyEntry);
+        document.getElementById('move-copy-cancel').addEventListener('click', closeMoveCopyModal);
     }
 
     function clearResumeContent() {
