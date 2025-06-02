@@ -7,39 +7,45 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            display: flex;
             margin: 0;
             padding: 0;
+            line-height: 1.2;
+            font-size: 14px;
+            display: flex;
+            min-height: 100vh;
         }
         .builder-container {
             display: flex;
             width: 100%;
             max-width: 1400px;
             margin: 0 auto;
+            padding: 10px;
+            box-sizing: border-box;
         }
         .input-area {
             width: 40%;
-            padding: 20px;
-            background-color: #f4f4f4;
+            padding-right: 20px;
             overflow-y: auto;
-            height: 100vh;
+            box-sizing: border-box;
         }
         .resume-area {
             width: 60%;
-            padding: 20px;
             border-left: 1px solid #ccc;
+            padding-left: 20px;
+            box-sizing: border-box;
             overflow-y: auto;
-            height: 100vh;
         }
         .resume-area .header {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
         .resume-area .header h1 {
             margin: 0;
+            font-size: 16px;
         }
         .resume-area .header p {
-            margin: 2px 0;
+            margin: 1px 0;
+            font-size: 11px;
         }
         .resume-section {
             margin-top: 20px;
@@ -125,7 +131,6 @@ function addSection() {
 
     document.getElementById("resume-sections").appendChild(section);
 
-    // Clear input
     document.getElementById("sectionTitle").value = '';
     document.getElementById("sectionContent").value = '';
 }
