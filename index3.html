@@ -114,6 +114,9 @@
         .resume-section .section-content li:hover .bullet-control-btn { display: inline; }
         .resume-section .section-content li .bullet-text-content:hover { background-color: #f0f8ff; cursor: pointer; }
         .resume-section .section-content .list-entry-item li:hover { background-color: #f0f8ff; cursor: pointer; }
+        
+        .resume-section .section-content .paragraph-content-display { cursor: pointer; margin: 1px 0; margin-top: 3px; }
+        .resume-section .section-content .paragraph-content-display:hover { background-color: #f0f8ff; }
 
 
         .bullet-control-btn { /* General class for controls on bullet LI itself in PREVIEW */
@@ -143,12 +146,20 @@
         #move-copy-modal select { width: 100%; margin-bottom: 15px; padding: 8px; font-size: 13px; }
         #move-copy-modal button { font-size: 13px; padding: 8px 15px; }
 
+        /* Print Preview Mode Styles (for on-screen hiding of controls) */
+        body.print-preview-mode .entry-controls,
+        body.print-preview-mode .bullet-control-btn,
+        body.print-preview-mode .order-button, 
+        body.print-preview-mode #section-remove-list .remove-button,
+        body.print-preview-mode .input-section button:not(#toggle-print-preview-button) { /* Hides form buttons etc. except the toggle itself */
+            display: none !important;
+        }
 
         /* Print Styles */
         @media print {
              body { font-size: 10px; line-height: 1; display: block; }
              .builder-container { display: block; width: 100%; max-width: 100%; padding: 0; margin: 0; }
-             .input-area, #move-copy-modal { display: none !important; }
+             .input-area, #move-copy-modal, #toggle-print-preview-button, .input-section h3:has(~ #toggle-print-preview-button) + p /* Hide print options section */ { display: none !important; }
              .resume-area { width: 100%; border-left: none; padding-left: 0; overflow-y: visible; }
              .resume-area .container { font-size: 10px; line-height: 1; }
              .entry-controls, .bullet-control-btn { display: none !important; }
@@ -213,6 +224,7 @@
         <label for="skills-content">Paragraph Content:</label><textarea id="skills-content" rows="3"></textarea>
         <p style="font-size: 10px; color:#555; margin-top: 5px;">Not sorted by date.</p>
         <button id="paragraph-submit-button" onclick="setParagraphContentForm()">Set Content</button>
+        <button id="paragraph-cancel-button" class="cancel-button" onclick="cancelEdit('paragraph')" style="display:none;">Cancel</button> <!-- Added cancel for paragraph -->
     </div>
     <!-- Structured Entry (Experience/Projects) Form -->
     <div class="input-section" id="add-structured-section">
@@ -252,6 +264,12 @@
         <button onclick="clearResumeContent()">Clear All Entries</button>
         <button onclick="location.reload()">Reset Builder</button>
     </div>
+    <!-- Print Options -->
+    <div class="input-section">
+        <h3>Print Options</h3>
+        <button id="toggle-print-preview-button" onclick="togglePrintPreviewMode()">Toggle Print-Friendly View</button>
+        <p style="font-size: 10px; color:#555;">Hides editor controls for a cleaner on-screen preview. Use your browser's Print (Ctrl+P) function. For best results (e.g. to remove page titles/URLs), also disable "Headers and footers" in your browser's print dialog settings.</p>
+    </div>
 </div>
 <div class="resume-area">
     <div class="container">
@@ -284,21 +302,8 @@
     function processBolding(text) { if (typeof text !== 'string') return text; return text.replace(/\*\*(.*?)\*\*/gi, '<strong>$1</strong>');}
     function parseDateForSorting(dateStr) { if (!dateStr) return null; if (dateStr.toLowerCase().includes("present")) return new Date(9999, 0, 1); const fullRangeMatch = dateStr.match(/([A-Za-z]+ \d{4})\s*[-–]\s*([A-Za-z]+ \d{4})/); if (fullRangeMatch) { const end = new Date(fullRangeMatch[2]); if (!isNaN(end.getTime())) return end; } const yearRange = dateStr.match(/(\d{4})\s*[-–]\s*(\d{4})/); if (yearRange) return new Date(parseInt(yearRange[2]), 11, 31); const monthYear = dateStr.match(/([A-Za-z]+)\s+(\d{4})/); if (monthYear) { const date = new Date(`${monthYear[1]} 1, ${monthYear[2]}`); if (!isNaN(date.getTime())) return date; } const yearOnly = dateStr.match(/^(\d{4})$/); if (yearOnly) return new Date(parseInt(yearOnly[1]), 11, 31); const genericParse = new Date(dateStr); if (!isNaN(genericParse.getTime()) && genericParse.getFullYear() > 1900 && genericParse.getFullYear() < 3000) return genericParse; return null; }
 
-    function renderResumeSections() {
-        const resumeSectionsDiv = document.getElementById('resume-sections');
-        resumeSectionsDiv.innerHTML = '';
-        dynamicSections.forEach(section => {
-            const sectionDiv = document.createElement('div'); sectionDiv.classList.add('resume-section'); sectionDiv.id = `resume-section-${section.id}`;
-            const titleDiv = document.createElement('div'); titleDiv.classList.add('section-title'); titleDiv.textContent = section.title;
-            const contentDiv = document.createElement('div'); contentDiv.classList.add('section-content'); contentDiv.id = `content-${section.id}`;
-            if (section.type === 'list-item' || section.type === 'structured-entry') { // list-item needs UL for its list-entry-item > li
-                const ul = document.createElement('ul'); contentDiv.appendChild(ul);
-            }
-            sectionDiv.appendChild(titleDiv); sectionDiv.appendChild(contentDiv);
-            resumeSectionsDiv.appendChild(sectionDiv);
-        });
-        populateResumeContent();
-    }
+    // This global renderResumeSections is defined correctly in initializeResume
+    // function renderResumeSections() { ... } 
 
     function populateSectionDropdowns() {
         const sectionSelects = document.querySelectorAll('.section-select');
@@ -354,7 +359,7 @@
 
     function setFormMode(formTypeKey, isEditing) {
         const submitButton = document.getElementById(`${formTypeKey}-submit-button`);
-        const cancelButton = document.getElementById(`${formTypeKey}-cancel-button`);
+        const cancelButton = document.getElementById(`${formTypeKey}-cancel-button`); // Assumes all relevant forms have a cancel button with this ID pattern
         if (submitButton) submitButton.textContent = isEditing ? `Update ${formTypeKey === 'list' ? 'Item' : (formTypeKey === 'paragraph' ? 'Content' : 'Entry')}` : `Add ${formTypeKey === 'list' ? 'Item' : (formTypeKey === 'paragraph' ? 'Content' : 'Entry')}`;
         if (cancelButton) cancelButton.style.display = isEditing ? 'inline-block' : 'none';
     }
@@ -365,7 +370,7 @@
         } else if (formTypeKey === 'structured') {
             ['structured-position', 'structured-company', 'structured-location', 'structured-dates'].forEach(id => document.getElementById(id).value = '');
             const bulletsContainer = document.getElementById('structured-bullets-container');
-            bulletsContainer.querySelectorAll('.bullet-item').forEach(item => item.remove()); // Remove all main bullet groups
+            bulletsContainer.querySelectorAll('.bullet-item').forEach(item => item.remove()); 
             addMainBulletInputForm('structured-bullets-container', '');
         } else if (formTypeKey === 'list') {
             document.getElementById('list-item-text').value = '';
@@ -387,7 +392,7 @@
         const container = document.getElementById(containerId);
         const feedbackArea = container.querySelector('.bullet-feedback-area');
 
-        const mainBulletGroup = document.createElement('div'); // This is the .bullet-item
+        const mainBulletGroup = document.createElement('div'); 
         mainBulletGroup.classList.add('bullet-item');
 
         const mainBulletControls = document.createElement('div');
@@ -446,8 +451,11 @@
         const section = dynamicSections.find(s => s.id === sectionId); if (!section || section.type !== 'education-entry') return false;
         const sortDate = parseDateForSorting(data.date); if (!sortDate && data.date) alert(`Education entry date "${data.date}" could not be parsed.`); data.sortDate = sortDate || new Date(0);
         if (!resumeContentData.sections[sectionId]) resumeContentData.sections[sectionId] = [];
-        if (editingContext && editingContext.sectionId === sectionId && editingContext.type === 'education-entry') { resumeContentData.sections[sectionId][editingContext.entryIndex] = data; }
-        else { resumeContentData.sections[sectionId].push(data); }
+        if (editingContext && editingContext.sectionId === sectionId && editingContext.type === 'education-entry' && editingContext.entryIndex !== undefined) { 
+            resumeContentData.sections[sectionId][editingContext.entryIndex] = data; 
+        } else { 
+            resumeContentData.sections[sectionId].push(data); 
+        }
         populateResumeContent(); return true;
     }
     function addEducationEntryForm() {
@@ -458,18 +466,24 @@
     }
     function setParagraphContent(sectionId, content) {
         const section = dynamicSections.find(s => s.id === sectionId); if (!section || section.type !== 'paragraph') return;
-        resumeContentData.sections[sectionId] = [content]; populateResumeContent();
+        // Paragraphs are stored as an array with one item at index 0
+        resumeContentData.sections[sectionId] = [content]; 
+        populateResumeContent();
     }
     function setParagraphContentForm() {
         const sectionId = document.getElementById('para-section-select').value; if (!sectionId) { alert("Please select section."); return; }
         setParagraphContent(sectionId, document.getElementById('skills-content').value);
+        // If it was an edit, cancelEdit will reset form mode and clear context
+        if (editingContext && editingContext.type === 'paragraph') {
+            cancelEdit('paragraph');
+        }
     }
     function addStructuredEntry(sectionId, data) {
         const section = dynamicSections.find(s => s.id === sectionId); if (!section || section.type !== 'structured-entry') return false;
         const sortDate = parseDateForSorting(data.dates); if (!sortDate && data.dates) alert(`Structured entry dates "${data.dates}" could not be parsed.`);
         data.sortDate = sortDate || new Date(0);
         if (!resumeContentData.sections[sectionId]) resumeContentData.sections[sectionId] = [];
-        if (editingContext && editingContext.sectionId === sectionId && editingContext.type === 'structured-entry') {
+        if (editingContext && editingContext.sectionId === sectionId && editingContext.type === 'structured-entry' && editingContext.entryIndex !== undefined) {
             resumeContentData.sections[sectionId][editingContext.entryIndex] = data;
         } else {
             resumeContentData.sections[sectionId].push(data);
@@ -500,8 +514,11 @@
         const sortDate = parseDateForSorting(text); if (!sortDate && text.match(/\d{4}/)) alert(`List item date in "${text}" not parsed.`);
         const data = { text: text, sortDate: sortDate || new Date(0) };
         if (!resumeContentData.sections[sectionId]) resumeContentData.sections[sectionId] = [];
-        if (editingContext && editingContext.sectionId === sectionId && editingContext.type === 'list-item') { resumeContentData.sections[sectionId][editingContext.entryIndex] = data; }
-        else { resumeContentData.sections[sectionId].push(data); }
+        if (editingContext && editingContext.sectionId === sectionId && editingContext.type === 'list-item' && editingContext.entryIndex !== undefined) { 
+            resumeContentData.sections[sectionId][editingContext.entryIndex] = data; 
+        } else { 
+            resumeContentData.sections[sectionId].push(data); 
+        }
         populateResumeContent(); return true;
     }
     function addListItemForm() {
@@ -514,6 +531,8 @@
         const target = event.target;
         const entryElement = target.closest('.job-entry, .list-entry-item');
         const bulletLiElement = target.closest('li[data-bullet-path]');
+        const paragraphElement = target.closest('.paragraph-content-display');
+
 
         if (target.classList.contains('entry-control-button') && entryElement) {
             const sectionId = entryElement.dataset.sectionId;
@@ -539,35 +558,49 @@
              loadEntryForEditing(entryElement.dataset.sectionId, parseInt(entryElement.dataset.entryIndex)); document.getElementById('add-structured-section').scrollIntoView({ behavior: 'smooth' });
         } else if (target.closest('.list-entry-item li') && entryElement?.classList.contains('list-entry-item')) {
             loadEntryForEditing(entryElement.dataset.sectionId, parseInt(entryElement.dataset.entryIndex)); document.getElementById('add-list-section').scrollIntoView({ behavior: 'smooth' });
+        } else if (paragraphElement) {
+            const sectionId = paragraphElement.dataset.sectionId;
+            // Paragraphs are stored as an array with one item at index 0
+            loadEntryForEditing(sectionId, 0); 
+            document.getElementById('add-paragraph-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
     }
 
     function loadEntryForEditing(sectionId, entryIndex) {
         const section = dynamicSections.find(s => s.id === sectionId); if (!section) return;
-        const entryData = resumeContentData.sections[sectionId]?.[entryIndex]; if (!entryData) return;
-        editingContext = { sectionId, entryIndex, type: section.type }; let formTypeKey;
+        const entryData = resumeContentData.sections[sectionId]?.[entryIndex]; 
+        // For paragraph, entryData will be the string content itself. For others, it's an object.
+        // No explicit check for !entryData because for a new paragraph section, it might be undefined initially.
+        // However, clicking implies it exists. If it was an empty paragraph, entryData would be "" or undefined.
+
+        editingContext = { sectionId, entryIndex, type: section.type }; 
+        let formTypeKey;
 
         if (section.type === 'education-entry') {
             formTypeKey = 'education'; document.getElementById('edu-section-select').value = sectionId;
-            ['degree', 'institution', 'date', 'gpa', 'expected'].forEach(f => document.getElementById(`edu-${f}`).value = entryData[f] || '');
+            ['degree', 'institution', 'date', 'gpa', 'expected'].forEach(f => document.getElementById(`edu-${f}`).value = entryData?.[f] || '');
         } else if (section.type === 'structured-entry') {
             formTypeKey = 'structured'; document.getElementById('structured-section-select').value = sectionId;
-            ['position', 'company', 'location', 'dates'].forEach(f => document.getElementById(`structured-${f}`).value = entryData[f] || '');
+            ['position', 'company', 'location', 'dates'].forEach(f => document.getElementById(`structured-${f}`).value = entryData?.[f] || '');
             const bulletsContainer = document.getElementById('structured-bullets-container');
-            bulletsContainer.querySelectorAll('.bullet-item').forEach(item => item.remove()); // Clear main bullet groups
-            (entryData.bullets || []).forEach(bullet => {
+            bulletsContainer.querySelectorAll('.bullet-item').forEach(item => item.remove()); 
+            (entryData?.bullets || []).forEach(bullet => {
                 if (typeof bullet === 'string') addMainBulletInputForm('structured-bullets-container', bullet);
                 else if (typeof bullet === 'object' && bullet.text) addMainBulletInputForm('structured-bullets-container', bullet.text, bullet.subBullets || []);
             });
-            if (!entryData.bullets || entryData.bullets.length === 0) addMainBulletInputForm('structured-bullets-container', '');
+            if (!entryData?.bullets || entryData.bullets.length === 0) addMainBulletInputForm('structured-bullets-container', '');
         } else if (section.type === 'list-item') {
             formTypeKey = 'list'; document.getElementById('list-section-select').value = sectionId;
-            document.getElementById('list-item-text').value = entryData.text || '';
+            document.getElementById('list-item-text').value = entryData?.text || '';
         } else if (section.type === 'paragraph') {
             formTypeKey = 'paragraph'; document.getElementById('para-section-select').value = sectionId;
-            document.getElementById('skills-content').value = entryData[0] || '';
+            document.getElementById('skills-content').value = entryData || ''; // entryData is the string content for paragraph
         }
-        if(formTypeKey) { setFormMode(formTypeKey, true); document.getElementById(`add-${formTypeKey}-section`).scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+        if(formTypeKey) { 
+            setFormMode(formTypeKey, true); 
+            const formElement = document.getElementById(`add-${formTypeKey}-section`);
+            if (formElement) formElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); 
+        }
     }
 
     function removeResumeEntry(sectionId, entryIndex) {
@@ -577,7 +610,7 @@
     }
     function removeResumeBulletOrSubBullet(sectionId, entryIndex, bulletPathArray) {
         const entry = resumeContentData.sections[sectionId]?.[entryIndex];
-        const currentSection = dynamicSections.find(s => s.id === sectionId); // Need section type
+        const currentSection = dynamicSections.find(s => s.id === sectionId); 
         if (!entry || !currentSection || currentSection.type !== 'structured-entry' || !entry.bullets) return;
 
         const mainBulletIndex = bulletPathArray[0]; const subBulletIndex = bulletPathArray.length > 1 ? bulletPathArray[1] : undefined;
@@ -586,7 +619,7 @@
             const mainBullet = entry.bullets[mainBulletIndex];
             if (typeof mainBullet === 'object' && mainBullet.subBullets?.[subBulletIndex] !== undefined) {
                 mainBullet.subBullets.splice(subBulletIndex, 1);
-                if (mainBullet.subBullets.length === 0) entry.bullets[mainBulletIndex] = mainBullet.text; // Revert to string if no subs left
+                if (mainBullet.subBullets.length === 0) entry.bullets[mainBulletIndex] = mainBullet.text; 
             }
         } else {
             entry.bullets.splice(mainBulletIndex, 1);
@@ -596,18 +629,27 @@
 
     function populateResumeContent() {
         dynamicSections.forEach(section => {
-            const contentDiv = document.getElementById(`content-${section.id}`); if (!contentDiv) return;
-            let ulForListOrStructured = contentDiv.querySelector('ul');
-            if ((section.type === 'list-item' || section.type === 'structured-entry') && !ulForListOrStructured) {
-                ulForListOrStructured = document.createElement('ul');
-                contentDiv.appendChild(ulForListOrStructured);
-            } else if (section.type !== 'list-item' && section.type !== 'structured-entry') { // For paragraph, clear existing content
-                contentDiv.innerHTML = '';
-            }
-            if (ulForListOrStructured && (section.type === 'list-item' || section.type === 'structured-entry')) {
-                 ulForListOrStructured.innerHTML = ''; // Clear previous list items to avoid duplication if structure changes.
+            const contentDiv = document.getElementById(`content-${section.id}`); 
+            if (!contentDiv) {
+                console.warn(`Content div for section ${section.id} not found.`);
+                return;
             }
 
+            let targetAppendElement; 
+            if (section.type === 'list-item') {
+                targetAppendElement = contentDiv.querySelector('ul');
+                if (targetAppendElement) {
+                    targetAppendElement.innerHTML = ''; // Clear UL content
+                } else {
+                    console.warn(`UL not found in list-item section ${section.id}. Recreating.`);
+                    contentDiv.innerHTML = ''; // Clear contentDiv just in case
+                    targetAppendElement = document.createElement('ul');
+                    contentDiv.appendChild(targetAppendElement);
+                }
+            } else { 
+                contentDiv.innerHTML = ''; // Clear direct content for paragraph, structured, education
+                targetAppendElement = contentDiv;
+            }
 
             let entries = resumeContentData.sections[section.id] || [];
             if (['education-entry', 'structured-entry', 'list-item'].includes(section.type)) {
@@ -631,7 +673,8 @@
                         let eduTitle = `<span>${processBolding(entry.degree||'')}</span><span>${processBolding(entry.date||'')}</span>`;
                         let eduLoc = `<span>${processBolding(entry.institution||'')}</span><span>${processBolding(entry.gpa?'GPA: '+entry.gpa:'')}</span>`;
                         entryWrapper.innerHTML = `<div class="job-title">${eduTitle}</div><div class="location">${eduLoc}</div>${entry.expected?`<p>${processBolding(entry.expected)}</p>`:''}`;
-                        entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml); contentDiv.appendChild(entryWrapper); // Appended to contentDiv directly
+                        entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml); 
+                        targetAppendElement.appendChild(entryWrapper);
                         break;
                     case 'structured-entry':
                         entryWrapper = document.createElement('div'); entryWrapper.classList.add('job-entry'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx;
@@ -639,7 +682,7 @@
                         let strLoc = `<span>${processBolding(entry.company||'')}</span><span>${processBolding(entry.location||'')}</span>`;
                         entryWrapper.innerHTML = `<div class="job-title">${strTitle}</div><div class="location">${strLoc}</div>`;
                         if (entry.bullets?.length > 0) {
-                            const ulBullets = document.createElement('ul'); // This UL is for bullets within the job-entry
+                            const ulBullets = document.createElement('ul'); 
                             entry.bullets.forEach((bulletItem, mainIdx) => {
                                 const li = document.createElement('li'); li.dataset.bulletPath = JSON.stringify([mainIdx]);
                                 const bulletText = typeof bulletItem === 'string' ? bulletItem : bulletItem.text;
@@ -657,52 +700,33 @@
                             });
                             entryWrapper.appendChild(ulBullets);
                         }
-                        entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml); contentDiv.appendChild(entryWrapper); // Appended to contentDiv directly
+                        entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml); 
+                        targetAppendElement.appendChild(entryWrapper);
                         break;
                     case 'paragraph':
-                        const p = document.createElement('p'); p.innerHTML = processBolding(entry || ''); contentDiv.appendChild(p);
+                        const p = document.createElement('p'); 
+                        p.innerHTML = processBolding(entry || ''); // 'entry' is the string content
+                        p.dataset.sectionId = section.id;      
+                        p.classList.add('paragraph-content-display');
+                        p.title = "Click to edit this paragraph";
+                        targetAppendElement.appendChild(p);      
                         break;
                     case 'list-item':
-                        // const ulForList = contentDiv.querySelector('ul'); // This was problematic
-                        ulForListOrStructured = contentDiv.querySelector('ul'); // Use the one ensured at the top of the loop
-                        entryWrapper = document.createElement('div'); entryWrapper.classList.add('list-entry-item'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx;
-                        const liElem = document.createElement('li'); liElem.innerHTML = processBolding(entry.text || '');
-                        entryWrapper.appendChild(liElem); entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml);
-                        if(ulForListOrStructured) ulForListOrStructured.appendChild(entryWrapper);
+                        // 'entry' is { text: '...', sortDate: '...' }
+                        entryWrapper = document.createElement('div'); 
+                        entryWrapper.classList.add('list-entry-item'); 
+                        entryWrapper.dataset.sectionId = section.id; 
+                        entryWrapper.dataset.entryIndex = entryIdx;
+                        const liElem = document.createElement('li'); 
+                        liElem.innerHTML = processBolding(entry.text || '');
+                        entryWrapper.appendChild(liElem); 
+                        entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml);
+                        targetAppendElement.appendChild(entryWrapper); 
                         break;
                 }
             });
-             // If contentDiv for structured or education entry is meant to be a list, then items should be li.
-             // My current structure appends divs.job-entry. If they need to be LI of the main contentDiv UL, this needs rework.
-             // For now, structured/education entries are direct children of contentDiv, not LIs of its UL.
-             // List-item uses its ulForListOrStructured to append its items.
-             // The change: For structured-entry, if it's supposed to be a list of jobs, each job-entry div itself should be an LI
-             // or the `ulForListOrStructured` for structured-entry is not used.
-             // The initial renderResumeSections adds a UL for structured-entry, but it's not used.
-             // Correcting: education-entry and structured-entry don't inherently need a top-level UL in their contentDiv.
-             // They *contain* ULs for bullets if applicable. List-item *is* a list.
-
-             if (section.type === 'education-entry' || section.type === 'structured-entry') {
-                // These types don't use the contentDiv's direct UL for their main entries.
-                // The UL created in renderResumeSections for these types might be unused.
-                // Let's ensure contentDiv is cleared if it's not supposed to have a UL.
-                if (contentDiv.firstChild && contentDiv.firstChild.tagName === 'UL' && entries.length > 0 && contentDiv.querySelectorAll('.job-entry').length > 0) {
-                    // If job entries were added directly to contentDiv, and there's an empty UL, remove it.
-                    const directUl = contentDiv.querySelector(':scope > ul');
-                    if (directUl && directUl.children.length === 0) {
-                         // directUl.remove(); // This logic might be too aggressive, let's simplify renderResumeSections.
-                    }
-                }
-             }
         });
     }
-    // Correction for renderResumeSections to avoid unused UL for structured/education
-    // In renderResumeSections:
-    // if (section.type === 'list-item') { // ONLY list-item needs a direct UL in contentDiv for its items
-    //     const ul = document.createElement('ul'); contentDiv.appendChild(ul);
-    // }
-    // This will be applied in the script below.
-
 
     function openMoveCopyModal(sourceSectionId, entryIndex, actionType) {
         const sourceSection = dynamicSections.find(s => s.id === sourceSectionId);
@@ -717,7 +741,7 @@
         const confirmButton = document.getElementById('move-copy-confirm');
 
         modalTitle.textContent = actionType === 'move-entry' ? 'Move Entry To...' : 'Copy Entry To...';
-        targetSelect.innerHTML = ''; // Clear previous options
+        targetSelect.innerHTML = ''; 
 
         const compatibleSections = dynamicSections.filter(
             s => s.type === entryType && s.id !== sourceSectionId
@@ -766,30 +790,31 @@
             closeMoveCopyModal();
             return;
         }
-
-        // Deep copy the entry data
         let entryToProcess = JSON.parse(JSON.stringify(sourceSectionData[entryIndex]));
-
-        // Add to target section
         if (!resumeContentData.sections[targetSectionId]) {
             resumeContentData.sections[targetSectionId] = [];
         }
         resumeContentData.sections[targetSectionId].push(entryToProcess);
-
-        // If moving, remove from source section
         if (actionType === 'move-entry') {
             sourceSectionData.splice(entryIndex, 1);
         }
-
-        populateResumeContent(); // This will re-sort and re-render everything
+        populateResumeContent(); 
         closeMoveCopyModal();
     }
 
+    function togglePrintPreviewMode() {
+        document.body.classList.toggle('print-preview-mode');
+        const button = document.getElementById('toggle-print-preview-button');
+        if (document.body.classList.contains('print-preview-mode')) {
+            button.textContent = 'Exit Print-Friendly View';
+            document.querySelector('.resume-area').scrollTop = 0; // Scroll to top of resume
+        } else {
+            button.textContent = 'Toggle Print-Friendly View';
+        }
+    }
 
     function initializeResume() {
-        // Corrected renderResumeSections logic to only add UL for list-item type
-        // This is a redefinition of the global renderResumeSections for clarity of the fix
-        window.renderResumeSections = function() {
+        window.renderResumeSections = function() { // Define global renderResumeSections
             const resumeSectionsDiv = document.getElementById('resume-sections');
             resumeSectionsDiv.innerHTML = '';
             dynamicSections.forEach(section => {
@@ -797,19 +822,14 @@
                 const titleDiv = document.createElement('div'); titleDiv.classList.add('section-title'); titleDiv.textContent = section.title;
                 const contentDiv = document.createElement('div'); contentDiv.classList.add('section-content'); contentDiv.id = `content-${section.id}`;
                 
-                // ONLY list-item needs a direct UL in contentDiv for its list-entry-item wrappers
                 if (section.type === 'list-item') {
                     const ul = document.createElement('ul'); contentDiv.appendChild(ul);
                 }
-                // Structured-entry and Education-entry manage their own bullet ULs internally if needed.
-                // Paragraph doesn't use a UL.
-
                 sectionDiv.appendChild(titleDiv); sectionDiv.appendChild(contentDiv);
                 resumeSectionsDiv.appendChild(sectionDiv);
             });
-            populateResumeContent(); // populateResumeContent will handle filling these
+            populateResumeContent(); 
         }
-
 
         dynamicSections = [
             { id: 'education', title: 'Education', type: 'education-entry' },
@@ -818,7 +838,7 @@
             { id: 'extracurricular', title: 'Extracurricular Activities', type: 'list-item' }
         ];
         dynamicSections.forEach(section => { resumeContentData.sections[section.id] = []; });
-        renderResumeSections(); // Calls the corrected version
+        renderResumeSections(); 
 
         document.getElementById('name').value = 'Sara Sadek';
         document.getElementById('address').value = 'Rancho Santa Margarita, CA 92688';
@@ -830,7 +850,7 @@
         addEducationEntry('education', { degree: 'Bachelor of Science in Biology and Bachelor of Science in Computer Science', institution: 'California State University, Fullerton', date: 'May 2025', gpa: '3.45', expected: 'Expected Graduation: May 2025' });
         setParagraphContent('technical-skills', 'Microscopy, Aseptic Technique, Micropipetting, Spectrophotometry, Gel Electrophoresis, Capsule Stain, Python, Bash, C++ (novice), x86 (novice), Data Analysis, Procedural Adherence, Customer Service, Communication.');
 
-        const defaultExperienceEntries = [ // ORIGINAL BULLETS (ARRAYS OF STRINGS)
+        const defaultExperienceEntries = [ 
              { position: 'Crew', company: 'Chipotle', location: '22245 El Paseo, Rancho Santa Margarita, CA', dates: 'August 2023 - Present', bullets: ['Ensured high order accuracy by implementing a step-by-step confirmation process and verbally verifying item details, consistently limiting errors to fewer than 4 per 5-hour shift', 'Utilized the cash register to charge 10–20 customers per shift, **double-checking totals** to prevent overcharging and **ensuring extras** like cups and chips were included when ordered', 'Fostered safe food consumption by strictly following detailed operational and sanitation protocols during 100% of my closing shifts, reducing potential contamination risks'] },
              { position: 'Supplemental Instruction Leader (Computer Science)', company: 'CSUF', location: '800 N State College Blvd, Fullerton, CA', dates: 'August 2022 - Present', bullets: ['Tailored communication strategies, incorporating **analogies & rephrasing**, to simplify complex technical concepts related to hybrid x86-64 assembly with C++ enhancing comprehension', 'Boosted student performance by **adapting explanations** through active questioning and observation, leading SI attendees to score 1–1.5x higher than non-attendees'] },
              { position: 'CREP Student Researcher', company: 'CSUF', location: '800 N State College Blvd, Fullerton, CA', dates: 'August 2022 - May 2023', bullets: ['Managed and **cleaned** a complex health-related dataset (N=62,482) from the Tennessee Cancer Registry for localized malignant breast cancer (LMBC)', 'Reviewed 5 papers on various cancers to **identify demographic and clinical variables** consistently linked to outcomes (e.g., age, marital status, insurance type)', 'Performed quantitative analysis, including **Chi-square tests and multivariate logistic regression**, on cleaned health data'] },
@@ -842,7 +862,7 @@
               { position: 'Peer Mentor', company: 'CSUF', location: '800 N State College Blvd, Fullerton, CA', dates: 'August 2018 - December 2018', bullets: ['Provided personalized support to 25 students in the “Think Like Einstein” course by addressing questions and guiding them to campus resources such as Titan Connection, Titan Link, counselors, research opportunities, and professional communication skills'] },
               { position: 'Orientation Leader', company: 'CSUF', location: '800 N State College Blvd, Fullerton, CA', dates: 'June 2018 - August 2018', bullets: ['Guided diverse groups of new students, presenting essential campus resources and procedures daily to groups of 25-30 students'] }
         ];
-        defaultExperienceEntries.forEach(entry => addStructuredEntry('experience', entry)); // addStructuredEntry will handle the array of strings correctly
+        defaultExperienceEntries.forEach(entry => addStructuredEntry('experience', entry)); 
 
         const defaultExtracurricularItems = [ 'STEM Advantage Scholar | January 2022 – Present', 'CSUF Chapter of ACM Member | August 2022 – May 2023', 'Example Older Activity | 2017 - 2018' ];
         defaultExtracurricularItems.forEach(itemText => addListItem('extracurricular', itemText));
@@ -853,8 +873,6 @@
 
         populateSectionDropdowns(); renderSectionRemovalList();
         document.getElementById('resume-sections').addEventListener('click', handleResumeInteraction);
-
-        // Add event listeners for the move/copy modal
         document.getElementById('move-copy-confirm').addEventListener('click', performMoveCopyEntry);
         document.getElementById('move-copy-cancel').addEventListener('click', closeMoveCopyModal);
     }
@@ -863,7 +881,8 @@
         for (const sectionId in resumeContentData.sections) resumeContentData.sections[sectionId] = [];
         document.getElementById('resume-name').textContent = ''; document.getElementById('resume-contact').textContent = '';
         const linkedinLink = document.getElementById('resume-linkedin'); linkedinLink.href = '#'; linkedinLink.textContent = '';
-        populateResumeContent(); cancelEdit('education'); cancelEdit('structured'); cancelEdit('list'); cancelEdit('paragraph');
+        populateResumeContent(); 
+        cancelEdit('education'); cancelEdit('structured'); cancelEdit('list'); cancelEdit('paragraph');
     }
     document.addEventListener('DOMContentLoaded', initializeResume);
 
