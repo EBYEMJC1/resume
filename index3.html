@@ -554,16 +554,14 @@
         if (addStructuredEntry(sectionId, data)) cancelEdit('structured');
     }
 
-    // Updated addListItem to accept a string (for initial data) or an object with bullets (from form/edit)
     function addListItem(sectionId, itemData) { 
         const section = dynamicSections.find(s => s.id === sectionId); if (!section || section.type !== 'list-item') return false;
         
         let entryData;
         if (typeof itemData === 'string') {
-            // Handle initial string data by wrapping it
             entryData = { bullets: [itemData] };
         } else {
-            entryData = itemData; // Assumed to be { bullets: [...], sortDate: (optional) }
+            entryData = itemData; 
         }
 
         let finalSortDate = entryData.sortDate; 
@@ -600,7 +598,6 @@
 
         if (bulletsData.length === 0) { alert("At least one bullet is required for a list item entry."); return; }
 
-        // Pass as object: { bullets: bulletsData }
         if (addListItem(sectionId, { bullets: bulletsData })) cancelEdit('list');
     }
 
@@ -741,7 +738,16 @@
 
             let entries = resumeContentData.sections[section.id] || [];
             if (['education-entry', 'structured-entry', 'list-item'].includes(section.type)) {
-                entries.sort((a, b) => (a.sortDate || 0) instanceof Date && (b.sortDate || 0) instanceof Date ? b.sortDate.getTime() - a.sortDate.getTime() : 0);
+                entries.sort((a, b) => {
+                    // Default to a very old date if sortDate is missing, not a Date instance, or an invalid Date
+                    const dateA = (a.sortDate instanceof Date && !isNaN(a.sortDate.getTime())) 
+                                  ? a.sortDate 
+                                  : new Date(0);
+                    const dateB = (b.sortDate instanceof Date && !isNaN(b.sortDate.getTime())) 
+                                  ? b.sortDate 
+                                  : new Date(0);
+                    return dateB.getTime() - dateA.getTime(); // Descending (most recent first)
+                });
             }
 
             entries.forEach((entry, entryIdx) => {
@@ -884,6 +890,20 @@
         }
         let entryToProcess = JSON.parse(JSON.stringify(sourceSectionData[entryIndex]));
         
+        // Re-hydrate sortDate if it exists and was stringified
+        if (entryToProcess.hasOwnProperty('sortDate') && typeof entryToProcess.sortDate === 'string') {
+            const parsedDate = new Date(entryToProcess.sortDate);
+            if (!isNaN(parsedDate)) {
+                entryToProcess.sortDate = parsedDate;
+            } else {
+                console.warn("Failed to parse date string during move/copy, defaulting:", entryToProcess.sortDate);
+                entryToProcess.sortDate = new Date(0); 
+            }
+        } else if (entryToProcess.hasOwnProperty('sortDate') && !(entryToProcess.sortDate instanceof Date)) {
+             console.warn("sortDate was not a string or Date after stringify/parse, defaulting.");
+            entryToProcess.sortDate = new Date(0);
+        }
+        
         if (!resumeContentData.sections[targetSectionId]) {
             resumeContentData.sections[targetSectionId] = [];
         }
@@ -942,7 +962,7 @@
 
         document.getElementById('name').value = 'Sara Sadek';
         document.getElementById('address').value = 'Rancho Santa Margarita, CA 92688';
-        document.getElementById('email').value = 'EBYEMJCitoaoL@gmail.com';
+        document.getElementById('email').value = 'EBYEMJCitoaoL@gmail.com'; // Using email from index3 (8).html
         document.getElementById('phone').value = '(310) 595-0876';
         document.getElementById('linkedin').value = 'https://www.linkedin.com/in/sara-ayoub-sadek-630b55168';
         updateHeader();
@@ -950,7 +970,6 @@
         addEducationEntry('education', { degree: 'Bachelor of Science in Biology and Bachelor of Science in Computer Science', institution: 'California State University, Fullerton', date: 'May 2025', gpa: '3.45', expected: 'Expected Graduation: May 2025' });
         setParagraphContent('technical-skills', 'Microscopy, Aseptic Technique, Micropipetting, Spectrophotometry, Gel Electrophoresis, Capsule Stain, Python, Bash, C++ (novice), x86 (novice), Data Analysis, Procedural Adherence, Customer Service, Communication.');
 
-        // Original Experience Data
         const defaultExperienceEntries = [ 
              { position: 'Crew', company: 'Chipotle', location: '22245 El Paseo, Rancho Santa Margarita, CA', dates: 'August 2023 - Present', bullets: ['Ensured high order accuracy by implementing a step-by-step confirmation process and verbally verifying item details, consistently limiting errors to fewer than 4 per 5-hour shift', 'Utilized the cash register to charge 10–20 customers per shift, **double-checking totals** to prevent overcharging and **ensuring extras** like cups and chips were included when ordered', 'Fostered safe food consumption by strictly following detailed operational and sanitation protocols during 100% of my closing shifts, reducing potential contamination risks'] },
              { position: 'Supplemental Instruction Leader (Computer Science)', company: 'CSUF', location: '800 N State College Blvd, Fullerton, CA', dates: 'August 2022 - Present', bullets: ['Tailored communication strategies, incorporating **analogies & rephrasing**, to simplify complex technical concepts related to hybrid x86-64 assembly with C++ enhancing comprehension', 'Boosted student performance by **adapting explanations** through active questioning and observation, leading SI attendees to score 1–1.5x higher than non-attendees'] },
@@ -965,17 +984,15 @@
         ];
         defaultExperienceEntries.forEach(entry => addStructuredEntry('experience', entry)); 
 
-        // Original Extracurricular Data (array of strings)
         const defaultExtracurricularItems = [ 
             'STEM Advantage Scholar | January 2022 – Present', 
             'CSUF Chapter of ACM Member | August 2022 – May 2023', 
             'Example Older Activity | 2017 - 2018' 
         ];
-        defaultExtracurricularItems.forEach(itemText => addListItem('extracurricular', itemText)); // Pass string directly
+        defaultExtracurricularItems.forEach(itemText => addListItem('extracurricular', itemText)); 
 
-        renderResumeSections(); // Call this *after* all initial data is added
+        renderResumeSections(); 
 
-        // Clear and add one empty bullet to forms
         ['structured-bullets-container', 'list-bullets-container'].forEach(containerId => {
             const container = document.getElementById(containerId);
             if (container) { 
