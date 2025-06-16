@@ -15,6 +15,6 @@
     { "name": "Object-Oriented Programming", "grade": "B", "showGrade": true },
     { "name": "Organic Chemistry Lab", "grade": "B-", "showGrade": true },
     { "name": "Python Programming", "grade": "A", "showGrade": true },
-    { "name": "Software Engineering", "grade": "A", "showGrade": true },
+    { "name": "Software Engineering", "grade": "A", "showGrade": true }
   ]
 }
