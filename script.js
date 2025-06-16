@@ -10,6 +10,9 @@ const LOCAL_STORAGE_KEY = 'resumeBuilderData';
 function saveToLocalStorage() {
     console.log("Saving current state to localStorage...");
     try {
+        // Before saving, ensure the header data is up-to-date from the input fields
+        updateHeaderDataFromInputs(); 
+        
         const dataToSave = {
             dynamicSections,
             resumeContentData
@@ -28,33 +31,30 @@ function loadFromLocalStorage() {
     if (savedData) {
         try {
             const parsedData = JSON.parse(savedData);
-            // Basic validation to ensure the data is what we expect
             if (parsedData.dynamicSections && parsedData.resumeContentData) {
                 console.log("Saved data found. Loading from localStorage.");
                 dynamicSections = parsedData.dynamicSections;
                 resumeContentData = parsedData.resumeContentData;
-                return true; // Indicate success
+                return true;
             }
         } catch (error) {
             console.error("Error parsing data from localStorage:", error);
-            return false; // Indicate failure
+            return false;
         }
     }
     console.log("No valid data found in localStorage.");
-    return false; // Indicate no data was found
+    return false;
 }
 
 // --- CORE INITIALIZATION ---
 async function initializeResume() {
     originalDocumentTitle = document.title;
     
-    // First, try to load the entire state from the browser's local storage
     const loadedFromStorage = loadFromLocalStorage();
 
-    // If nothing was loaded from storage, fetch the default data from JSON files
     if (!loadedFromStorage) {
         console.log("Loading default data from JSON files...");
-        
+        // --- FIX #1 PART 1: This block now correctly sets ALL default data ---
         dynamicSections = [
             { id: 'education', title: 'Education', type: 'education-entry' },
             { id: 'technical-skills', title: 'Technical Skills', type: 'paragraph' },
@@ -89,25 +89,32 @@ async function initializeResume() {
                 resumeContentData.sections[section.id] = fileDataMap[file][section.id] || [];
             });
 
+            // Set default header data ONLY when loading from JSON
+            resumeContentData.header = {
+                name: 'Sara Sadek',
+                address: 'Rancho Santa Margarita, CA 92688',
+                email: 'EBYEMJCitoaoL@gmail.com',
+                phone: '(310) 595-0876',
+                customLinks: [
+                    { label: 'LinkedIn', url: 'https://www.linkedin.com/in/sara-ayoub-sadek-630b55168', showQr: true }
+                ]
+            };
+
         } catch (error) {
             console.error("Fatal error loading initial resume data:", error);
             alert("Could not load default data from JSON files.");
         }
     }
-
-    // Populate header fields and links (this part doesn't need to be in localStorage unless you want it to be)
-    document.getElementById('name').value = 'Sara Sadek';
-    document.getElementById('address').value = 'Rancho Santa Margarita, CA 92688';
-    document.getElementById('email').value = 'EBYEMJCitoaoL@gmail.com';
-    document.getElementById('phone').value = '(310) 595-0876';
-
-    resumeContentData.header.customLinks = [
-        { label: 'LinkedIn', url: 'https://www.linkedin.com/in/sara-ayoub-sadek-630b55168', showQr: true }
-    ];
-    renderHeaderLinkInputs();
+    
+    // --- FIX #1 PART 2: Update the input fields from the data (either loaded or default) ---
+    document.getElementById('name').value = resumeContentData.header.name || '';
+    document.getElementById('address').value = resumeContentData.header.address || '';
+    document.getElementById('email').value = resumeContentData.header.email || '';
+    document.getElementById('phone').value = resumeContentData.header.phone || '';
+    renderHeaderLinkInputs(); // This will use resumeContentData.header.customLinks
     
     // Initial render and setup
-    updateHeader();
+    updateHeader(); // Renders the header visually from the now-correct data
     renderResumeSections();
     populateSectionDropdowns();
     renderSectionRemovalList();
@@ -124,11 +131,9 @@ function setupEventListeners() {
     document.getElementById('move-copy-cancel').addEventListener('click', closeMoveCopyModal);
 }
 
-// --- UTILITY AND HELPER FUNCTIONS (UNCHANGED) ---
 function processBolding(text) { if (typeof text !== 'string') return text; return text.replace(/\*\*(.*?)\*\*/gi, '<strong>$1</strong>');}
 function parseDateForSorting(dateStr) { if (!dateStr || typeof dateStr !== 'string') return null; const lowerDateStr = dateStr.toLowerCase(); if (lowerDateStr.includes("present")) return new Date(9999, 0, 1); const fullRangeMatch = dateStr.match(/(?:[A-Za-z]{3,})\s+\d{4}\s*[-–]\s*([A-Za-z]{3,})\s+(\d{4})/i); if (fullRangeMatch && fullRangeMatch[1] && fullRangeMatch[2]) { const monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]; const monthIndex = monthNames.indexOf(fullRangeMatch[1].substring(0,3).toLowerCase()); if (monthIndex > -1) return new Date(parseInt(fullRangeMatch[2]), monthIndex, 1); } const yearRangeMatch = dateStr.match(/\d{4}\s*[-–]\s*(\d{4})/); if (yearRangeMatch && yearRangeMatch[1]) return new Date(parseInt(yearRangeMatch[1]), 11, 31); const monthYearMatch = dateStr.match(/([A-Za-z]{3,})\s+(\d{4})/); if (monthYearMatch && monthYearMatch[1] && monthYearMatch[2]) { const monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]; const monthIndex = monthNames.indexOf(monthYearMatch[1].substring(0,3).toLowerCase()); if (monthIndex > -1) return new Date(parseInt(monthYearMatch[2]), monthIndex, 1); } const yearOnlyMatch = dateStr.match(/^(\d{4})$/); if (yearOnlyMatch && yearOnlyMatch[1]) return new Date(parseInt(yearOnlyMatch[1]), 11, 31); const yearMatches = dateStr.match(/\d{4}/g); if (yearMatches && yearMatches.length > 0) { const latestYear = Math.max(...yearMatches.map(Number)); const specificMonthYearRegex = new RegExp(`([A-Za-z]{3,})\\s+${latestYear}`); const specificMonthYearMatch = dateStr.match(specificMonthYearRegex); if (specificMonthYearMatch) { const monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]; const monthIndex = monthNames.indexOf(specificMonthYearMatch[1].substring(0,3).toLowerCase()); if (monthIndex > -1) return new Date(latestYear, monthIndex, 1); } return new Date(latestYear, 11, 31); } return null; }
 
-// --- UI MANIPULATION AND FORM LOGIC (Minor changes marked) ---
 function addHeaderLinkInput(label = '', url = '', showQr = false) { const container = document.getElementById('header-links-input-container'); const linkGroup = document.createElement('div'); linkGroup.classList.add('header-link-input-group'); const labelInput = document.createElement('input'); labelInput.type = 'text'; labelInput.classList.add('link-label-input'); labelInput.placeholder = 'Label (e.g., GitHub)'; labelInput.value = label; labelInput.oninput = updateHeader; const urlInput = document.createElement('input'); urlInput.type = 'text'; urlInput.classList.add('link-url-input'); urlInput.placeholder = 'URL (https://...)'; urlInput.value = url; urlInput.oninput = updateHeader; const qrToggleLabel = document.createElement('label'); qrToggleLabel.classList.add('link-qr-toggle-label'); const qrToggleCheckbox = document.createElement('input'); qrToggleCheckbox.type = 'checkbox'; qrToggleCheckbox.classList.add('link-qr-toggle'); qrToggleCheckbox.checked = showQr; qrToggleCheckbox.title = 'Show QR Code'; qrToggleCheckbox.onchange = updateHeader; qrToggleLabel.appendChild(qrToggleCheckbox); qrToggleLabel.appendChild(document.createTextNode(' QR')); const removeButton = document.createElement('button'); removeButton.type = 'button'; removeButton.classList.add('remove-link-button'); removeButton.textContent = '✕'; removeButton.title = 'Remove Link'; removeButton.onclick = function() { linkGroup.remove(); updateHeader(); }; linkGroup.appendChild(labelInput); linkGroup.appendChild(urlInput); linkGroup.appendChild(qrToggleLabel); linkGroup.appendChild(removeButton); container.appendChild(linkGroup); }
 function renderHeaderLinkInputs() { const container = document.getElementById('header-links-input-container'); container.innerHTML = ''; (resumeContentData.header.customLinks || []).forEach(link => { addHeaderLinkInput(link.label, link.url, link.showQr); }); if (!resumeContentData.header.customLinks || resumeContentData.header.customLinks.length === 0) { addHeaderLinkInput('', '', false); } }
 function populateSectionDropdowns() { const sectionSelects = document.querySelectorAll('.section-select'); sectionSelects.forEach(select => { const currentSelectedId = select.value; select.innerHTML = ''; let relevantSections = []; const formType = select.id.split('-')[0]; const targetEntryType = formType === 'edu' ? 'education-entry' : (formType === 'para' ? 'paragraph' : (formType === 'structured' ? 'structured-entry' : (formType === 'list' ? 'list-item' : (formType === 'coursework' ? 'coursework-list' : '')))); relevantSections = dynamicSections.filter(s => s.type === targetEntryType); if (relevantSections.length === 0) { select.innerHTML = `<option value="">No '${targetEntryType}' sections</option>`; select.disabled = true; } else { select.disabled = false; relevantSections.forEach(section => { const option = document.createElement('option'); option.value = section.id; option.textContent = section.title; select.appendChild(option); }); if (currentSelectedId && relevantSections.some(s => s.id === currentSelectedId)) { select.value = currentSelectedId; } else { select.value = relevantSections[0]?.id || ''; } } if (select.id === 'coursework-section-select' && select.value && !editingContext) { cancelEdit('coursework'); } }); }
@@ -157,12 +162,118 @@ function handleResumeInteraction(event) { const target = event.target; const cou
 function loadEntryForEditing(sectionId, index) { const section = dynamicSections.find(s => s.id === sectionId); if (!section) return; let formTypeKey; let formElementId; editingContext = { sectionId, type: section.type }; if (section.type === 'coursework-list') { formTypeKey = 'coursework'; formElementId = 'add-coursework-section-form'; editingContext.courseIndex = index; const courseData = resumeContentData.sections[sectionId]?.[index]; if (courseData) { document.getElementById('coursework-section-select').value = sectionId; document.getElementById('coursework-name-new').value = courseData.name; document.getElementById('coursework-grade-new').value = courseData.grade || ''; document.getElementById('coursework-show-grade-new').checked = courseData.showGrade; } } else { editingContext.entryIndex = index; const entryData = resumeContentData.sections[sectionId]?.[index]; if (section.type === 'education-entry') { formTypeKey = 'education'; formElementId = 'add-education-section'; document.getElementById('edu-section-select').value = sectionId; ['degree', 'institution', 'date', 'gpa', 'expected'].forEach(f => document.getElementById(`edu-${f}`).value = entryData?.[f] || ''); } else if (section.type === 'structured-entry') { formTypeKey = 'structured'; formElementId = 'add-structured-section'; document.getElementById('structured-section-select').value = sectionId; ['position', 'company', 'location', 'dates'].forEach(f => document.getElementById(`structured-${f}`).value = entryData?.[f] || ''); const bulletsContainer = document.getElementById('structured-bullets-container'); bulletsContainer.querySelectorAll('.bullet-item').forEach(item => item.remove()); (entryData?.bullets || []).forEach(bullet => { if (typeof bullet === 'string') addMainBulletInputForm('structured-bullets-container', bullet); else if (typeof bullet === 'object' && bullet.text) addMainBulletInputForm('structured-bullets-container', bullet.text, bullet.subBullets || []); }); if (!entryData?.bullets || entryData.bullets.length === 0) addMainBulletInputForm('structured-bullets-container', ''); } else if (section.type === 'list-item') { formTypeKey = 'list'; formElementId = 'add-list-section'; document.getElementById('list-section-select').value = sectionId; const bulletsContainer = document.getElementById('list-bullets-container'); bulletsContainer.querySelectorAll('.bullet-item').forEach(item => item.remove()); (entryData?.bullets || []).forEach(bullet => { if (typeof bullet === 'string') addMainBulletInputForm('list-bullets-container', bullet); else if (typeof bullet === 'object' && bullet.text) addMainBulletInputForm('list-bullets-container', bullet.text, bullet.subBullets || []); }); if (!entryData?.bullets || entryData.bullets.length === 0) addMainBulletInputForm('list-bullets-container', ''); } else if (section.type === 'paragraph') { formTypeKey = 'paragraph'; formElementId = 'add-paragraph-section'; document.getElementById('para-section-select').value = sectionId; document.getElementById('skills-content').value = entryData || ''; } } if(formTypeKey && formElementId) { setFormMode(formTypeKey, true); const formElement = document.getElementById(formElementId); if (formElement) formElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } }
 function removeResumeEntry(sectionId, entryIndex) { const section = dynamicSections.find(s => s.id === sectionId); if (!section) return; if (section.type === 'paragraph') { resumeContentData.sections[sectionId] = []; if (editingContext && editingContext.type === 'paragraph' && editingContext.sectionId === sectionId) { cancelEdit('paragraph'); } } else if (section.type === 'coursework-list') { if (confirm("Are you sure you want to remove all courses from this section?")) { resumeContentData.sections[sectionId] = []; if (editingContext && editingContext.type === 'coursework-list' && editingContext.sectionId === sectionId) { cancelEdit('coursework'); } } else { return; } } else if (resumeContentData.sections[sectionId]?.[entryIndex] !== undefined) { resumeContentData.sections[sectionId].splice(entryIndex, 1); if (editingContext && editingContext.type === section.type && editingContext.sectionId === sectionId && editingContext.entryIndex === entryIndex) { cancelEdit(section.type); } } populateResumeContent(); }
 function removeResumeBulletOrSubBullet(sectionId, entryIndex, bulletPathArray) { const entry = resumeContentData.sections[sectionId]?.[entryIndex]; const currentSection = dynamicSections.find(s => s.id === sectionId); if (!entry || !currentSection || !entry.bullets || (currentSection.type !== 'structured-entry' && currentSection.type !== 'list-item')) { return; } const mainBulletIndex = bulletPathArray[0]; const subBulletIndex = bulletPathArray.length > 1 ? bulletPathArray[1] : undefined; if (entry.bullets[mainBulletIndex] === undefined) return; if (subBulletIndex !== undefined) { const mainBullet = entry.bullets[mainBulletIndex]; if (typeof mainBullet === 'object' && mainBullet.subBullets?.[subBulletIndex] !== undefined) { mainBullet.subBullets.splice(subBulletIndex, 1); if (mainBullet.subBullets.length === 0) entry.bullets[mainBulletIndex] = mainBullet.text; } } else { entry.bullets.splice(mainBulletIndex, 1); } populateResumeContent(); }
-function populateResumeContent() { dynamicSections.forEach(section => { const contentDiv = document.getElementById(`content-${section.id}`); if (!contentDiv) { console.warn(`Content div for section ${section.id} not found.`); return; } contentDiv.innerHTML = ''; let entries = resumeContentData.sections[section.id] || []; if (['education-entry', 'structured-entry', 'list-item'].includes(section.type)) { entries.sort((a, b) => { const dateA = (a.sortDate instanceof Date && !isNaN(a.sortDate.getTime())) ? a.sortDate : new Date(0); const dateB = (b.sortDate instanceof Date && !isNaN(b.sortDate.getTime())) ? b.sortDate : new Date(0); return dateB.getTime() - dateA.getTime(); }); } if (section.type === 'coursework-list') { const courseworkPreviewWrapper = document.createElement('div'); courseworkPreviewWrapper.classList.add('coursework-list-preview-wrapper'); courseworkPreviewWrapper.dataset.sectionId = section.id; if (entries.length > 0) { const ul = document.createElement('ul'); ul.classList.add('coursework-list-preview'); const sortedEntries = [...entries].sort((a, b) => a.name.localeCompare(b.name)); sortedEntries.forEach((courseObj) => { const originalIndex = entries.findIndex(e => e.name === courseObj.name && e.grade === courseObj.grade); const li = document.createElement('li'); li.dataset.courseIndex = originalIndex; const textSpan = document.createElement('span'); textSpan.classList.add('course-text-content'); let courseText = processBolding(courseObj.name); if (courseObj.showGrade && courseObj.grade) { courseText += ` <span class="course-grade-display">(${courseObj.grade})</span>`; } textSpan.innerHTML = courseText; li.appendChild(textSpan); const itemControls = document.createElement('span'); itemControls.classList.add('course-item-controls'); itemControls.innerHTML = `<span class="control-btn edit" data-action="edit-course" title="Edit Course">✏️</span><span class="control-btn remove" data-action="remove-course" title="Remove Course">❌</span>`; li.appendChild(itemControls); ul.appendChild(li); }); courseworkPreviewWrapper.appendChild(ul); } contentDiv.appendChild(courseworkPreviewWrapper); } else { entries.forEach((entry, entryIdx) => { let specificEntryControlsHtml = `<div class="entry-controls"><button class="entry-control-button" data-action="edit" title="Edit">✏️</button><button class="entry-control-button" data-action="remove" title="Remove">❌</button>`;
-// --- MODIFICATION: Added Move/Copy to Education ---
-if (section.type === 'structured-entry' || section.type === 'education-entry') {
-    specificEntryControlsHtml += `<button class="entry-control-button" data-action="move-entry" title="Move Entry">➔</button><button class="entry-control-button" data-action="copy-entry" title="Copy Entry">❏</button>`;
+
+function populateResumeContent() {
+    dynamicSections.forEach(section => {
+        const contentDiv = document.getElementById(`content-${section.id}`);
+        if (!contentDiv) { console.warn(`Content div for section ${section.id} not found.`); return; }
+        contentDiv.innerHTML = '';
+        let entries = resumeContentData.sections[section.id] || [];
+        if (['education-entry', 'structured-entry', 'list-item'].includes(section.type)) {
+            entries.sort((a, b) => {
+                const dateA = (a.sortDate instanceof Date && !isNaN(a.sortDate.getTime())) ? a.sortDate : new Date(0);
+                const dateB = (b.sortDate instanceof Date && !isNaN(b.sortDate.getTime())) ? b.sortDate : new Date(0);
+                return dateB.getTime() - dateA.getTime();
+            });
+        }
+        if (section.type === 'coursework-list') {
+            const courseworkPreviewWrapper = document.createElement('div');
+            courseworkPreviewWrapper.classList.add('coursework-list-preview-wrapper');
+            courseworkPreviewWrapper.dataset.sectionId = section.id;
+            if (entries.length > 0) {
+                const ul = document.createElement('ul');
+                ul.classList.add('coursework-list-preview');
+                const sortedEntries = [...entries].sort((a, b) => a.name.localeCompare(b.name));
+                sortedEntries.forEach((courseObj) => {
+                    const originalIndex = entries.findIndex(e => e.name === courseObj.name && e.grade === courseObj.grade);
+                    const li = document.createElement('li');
+                    li.dataset.courseIndex = originalIndex;
+                    const textSpan = document.createElement('span');
+                    textSpan.classList.add('course-text-content');
+                    let courseText = processBolding(courseObj.name);
+                    if (courseObj.showGrade && courseObj.grade) { courseText += ` <span class="course-grade-display">(${courseObj.grade})</span>`; }
+                    textSpan.innerHTML = courseText;
+                    li.appendChild(textSpan);
+                    const itemControls = document.createElement('span');
+                    itemControls.classList.add('course-item-controls');
+                    itemControls.innerHTML = `<span class="control-btn edit" data-action="edit-course" title="Edit Course">✏️</span><span class="control-btn remove" data-action="remove-course" title="Remove Course">❌</span>`;
+                    li.appendChild(itemControls);
+                    ul.appendChild(li);
+                });
+                courseworkPreviewWrapper.appendChild(ul);
+            }
+            contentDiv.appendChild(courseworkPreviewWrapper);
+        } else {
+            entries.forEach((entry, entryIdx) => {
+                let entryWrapper;
+                // --- FIX #2: Corrected logic for building entry controls ---
+                let specificEntryControlsHtml = `<div class="entry-controls"><button class="entry-control-button" data-action="edit" title="Edit">✏️</button><button class="entry-control-button" data-action="remove" title="Remove">❌</button>`;
+                if (section.type === 'structured-entry' || section.type === 'education-entry') {
+                    specificEntryControlsHtml += `<button class="entry-control-button" data-action="move-entry" title="Move Entry">➔</button><button class="entry-control-button" data-action="copy-entry" title="Copy Entry">❏</button>`;
+                }
+                specificEntryControlsHtml += `</div>`;
+
+                switch (section.type) {
+                    case 'education-entry':
+                        entryWrapper = document.createElement('div'); entryWrapper.classList.add('job-entry'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx;
+                        let eduTitle = `<span>${processBolding(entry.degree||'')}</span><span>${processBolding(entry.date||'')}</span>`;
+                        let eduLoc = `<span>${processBolding(entry.institution||'')}</span><span>${processBolding(entry.gpa?'GPA: '+entry.gpa:'')}</span>`;
+                        entryWrapper.innerHTML = `<div class="job-title">${eduTitle}</div><div class="location">${eduLoc}</div>${entry.expected?`<p>${processBolding(entry.expected)}</p>`:''}`;
+                        entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml);
+                        contentDiv.appendChild(entryWrapper);
+                        break;
+                    case 'structured-entry':
+                    case 'list-item':
+                        entryWrapper = document.createElement('div');
+                        entryWrapper.classList.add(section.type === 'structured-entry' ? 'job-entry' : 'list-entry-item');
+                        entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx;
+                        if(section.type === 'structured-entry') {
+                            let strTitle = `<span>${processBolding(entry.position||'')}</span><span>${processBolding(entry.dates||'')}</span>`;
+                            let strLoc = `<span>${processBolding(entry.company||'')}</span><span>${processBolding(entry.location||'')}</span>`;
+                            entryWrapper.innerHTML = `<div class="job-title">${strTitle}</div><div class="location">${strLoc}</div>`;
+                        }
+                        if (entry.bullets?.length > 0) {
+                            const ulBullets = document.createElement('ul');
+                            entry.bullets.forEach((bulletItem, mainIdx) => {
+                                const li = document.createElement('li'); li.dataset.bulletPath = JSON.stringify([mainIdx]);
+                                const bulletText = typeof bulletItem === 'string' ? bulletItem : bulletItem.text;
+                                li.innerHTML = `<span class="bullet-text-content">${processBolding(bulletText)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`;
+                                if (typeof bulletItem === 'object' && bulletItem.subBullets?.length > 0) {
+                                    const subUl = document.createElement('ul');
+                                    bulletItem.subBullets.forEach((subTxt, subIdx) => {
+                                        const subLi = document.createElement('li'); subLi.dataset.bulletPath = JSON.stringify([mainIdx, subIdx]);
+                                        subLi.innerHTML = `<span class="bullet-text-content">${processBolding(subTxt)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`;
+                                        subUl.appendChild(subLi);
+                                    });
+                                    li.appendChild(subUl);
+                                }
+                                ulBullets.appendChild(li);
+                            });
+                            entryWrapper.appendChild(ulBullets);
+                        }
+                        entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml);
+                        contentDiv.appendChild(entryWrapper);
+                        break;
+                    case 'paragraph':
+                        const paragraphText = entry;
+                        if (paragraphText !== undefined) {
+                            entryWrapper = document.createElement('div');
+                            entryWrapper.classList.add('paragraph-entry');
+                            entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx;
+                            const p = document.createElement('p');
+                            p.innerHTML = processBolding(paragraphText || '');
+                            p.classList.add('paragraph-content-display');
+                            p.title = "Click to edit this paragraph block";
+                            entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml);
+                            entryWrapper.appendChild(p);
+                            contentDiv.appendChild(entryWrapper);
+                        }
+                        break;
+                }
+            });
+        }
+    });
 }
-specificEntryControlsHtml += `</div>`; let entryWrapper; switch (section.type) { case 'education-entry': entryWrapper = document.createElement('div'); entryWrapper.classList.add('job-entry'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx; let eduTitle = `<span>${processBolding(entry.degree||'')}</span><span>${processBolding(entry.date||'')}</span>`; let eduLoc = `<span>${processBolding(entry.institution||'')}</span><span>${processBolding(entry.gpa?'GPA: '+entry.gpa:'')}</span>`; entryWrapper.innerHTML = `<div class="job-title">${eduTitle}</div><div class="location">${eduLoc}</div>${entry.expected?`<p>${processBolding(entry.expected)}</p>`:''}`; entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml); contentDiv.appendChild(entryWrapper); break; case 'structured-entry': case 'list-item': entryWrapper = document.createElement('div'); entryWrapper.classList.add(section.type === 'structured-entry' ? 'job-entry' : 'list-entry-item'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx; if(section.type === 'structured-entry') { let strTitle = `<span>${processBolding(entry.position||'')}</span><span>${processBolding(entry.dates||'')}</span>`; let strLoc = `<span>${processBolding(entry.company||'')}</span><span>${processBolding(entry.location||'')}</span>`; entryWrapper.innerHTML = `<div class="job-title">${strTitle}</div><div class="location">${strLoc}</div>`; } if (entry.bullets?.length > 0) { const ulBullets = document.createElement('ul'); entry.bullets.forEach((bulletItem, mainIdx) => { const li = document.createElement('li'); li.dataset.bulletPath = JSON.stringify([mainIdx]); const bulletText = typeof bulletItem === 'string' ? bulletItem : bulletItem.text; li.innerHTML = `<span class="bullet-text-content">${processBolding(bulletText)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`; if (typeof bulletItem === 'object' && bulletItem.subBullets?.length > 0) { const subUl = document.createElement('ul'); bulletItem.subBullets.forEach((subTxt, subIdx) => { const subLi = document.createElement('li'); subLi.dataset.bulletPath = JSON.stringify([mainIdx, subIdx]); subLi.innerHTML = `<span class="bullet-text-content">${processBolding(subTxt)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`; subUl.appendChild(subLi); }); li.appendChild(subUl); } ulBullets.appendChild(li); }); entryWrapper.appendChild(ulBullets); } entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml); contentDiv.appendChild(entryWrapper); break; case 'paragraph': const paragraphText = entry; if (paragraphText !== undefined) { entryWrapper = document.createElement('div'); entryWrapper.classList.add('paragraph-entry'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx; const p = document.createElement('p'); p.innerHTML = processBolding(paragraphText || ''); p.classList.add('paragraph-content-display'); p.title = "Click to edit this paragraph block"; entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml); entryWrapper.appendChild(p); contentDiv.appendChild(entryWrapper); } break; } }); } }); }
 function openMoveCopyModal(sourceSectionId, entryIndex, actionType) { const sourceSection = dynamicSections.find(s => s.id === sourceSectionId); if (!sourceSection) return; const entryType = sourceSection.type; if (entryType === 'coursework-list') { alert("Moving or copying the entire coursework section is not supported."); return; } moveCopyContext = { sourceSectionId, entryIndex, actionType, entryType }; const modal = document.getElementById('move-copy-modal'); const modalTitle = document.getElementById('move-copy-modal-title'); const targetSelect = document.getElementById('move-copy-target-section'); const confirmButton = document.getElementById('move-copy-confirm'); modalTitle.textContent = actionType === 'move-entry' ? 'Move Entry To...' : 'Copy Entry To...'; targetSelect.innerHTML = ''; let compatibleSections; if (actionType === 'copy-entry') { compatibleSections = dynamicSections.filter(s => s.type === entryType); } else { compatibleSections = dynamicSections.filter(s => s.type === entryType && s.id !== sourceSectionId); } if (compatibleSections.length === 0) { const option = document.createElement('option'); option.value = ""; option.textContent = (actionType === 'copy-entry' && dynamicSections.some(s => s.id === sourceSectionId && s.type === entryType)) ? "No *other* compatible sections" : "No compatible sections available"; targetSelect.appendChild(option); targetSelect.disabled = true; confirmButton.disabled = true; } else { compatibleSections.forEach(section => { const option = document.createElement('option'); option.value = section.id; option.textContent = section.title; if (section.id === sourceSectionId && actionType === 'copy-entry') { option.textContent += " (current section)"; } targetSelect.appendChild(option); }); targetSelect.disabled = false; confirmButton.disabled = false; } modal.style.display = 'block'; }
 function closeMoveCopyModal() { const modal = document.getElementById('move-copy-modal'); modal.style.display = 'none'; moveCopyContext = null; }
 function performMoveCopyEntry() { if (!moveCopyContext) return; const { sourceSectionId, entryIndex, actionType, entryType } = moveCopyContext; const targetSectionId = document.getElementById('move-copy-target-section').value; if (!targetSectionId) { alert("Please select a target section."); return; } if (entryType === 'coursework-list') { closeMoveCopyModal(); return; } const sourceSectionDataArray = resumeContentData.sections[sourceSectionId]; if (!sourceSectionDataArray || sourceSectionDataArray[entryIndex] === undefined) { console.error("Source entry not found for move/copy operation at index:", entryIndex); closeMoveCopyModal(); return; } let entryToProcess = JSON.parse(JSON.stringify(sourceSectionDataArray[entryIndex])); if (entryToProcess.hasOwnProperty('sortDate') && typeof entryToProcess.sortDate === 'string') { const parsedDate = new Date(entryToProcess.sortDate); if (!isNaN(parsedDate)) entryToProcess.sortDate = parsedDate; else { console.warn("Failed to parse date string during move/copy, defaulting:", entryToProcess.sortDate); entryToProcess.sortDate = new Date(0); } } else if (entryToProcess.hasOwnProperty('sortDate') && !(entryToProcess.sortDate instanceof Date)) { console.warn("sortDate was not a string or Date after stringify/parse, defaulting."); entryToProcess.sortDate = new Date(0); } if (!resumeContentData.sections[targetSectionId]) { resumeContentData.sections[targetSectionId] = []; } const targetArray = resumeContentData.sections[targetSectionId]; if (actionType === 'copy-entry') { if (targetSectionId === sourceSectionId && typeof entryIndex === 'number' && entryIndex < targetArray.length) { targetArray.splice(entryIndex + 1, 0, entryToProcess); } else { targetArray.push(entryToProcess); } } else { targetArray.push(entryToProcess); if (sourceSectionId === targetSectionId) { const originalSourceArray = resumeContentData.sections[sourceSectionId]; if (typeof entryIndex === 'number' && entryIndex < originalSourceArray.length) { originalSourceArray.splice(entryIndex, 1); } else { console.warn("Move within same section: original entryIndex invalid after push or was initially invalid."); } } else { if (typeof entryIndex === 'number' && entryIndex < sourceSectionDataArray.length) { sourceSectionDataArray.splice(entryIndex, 1); } else { console.warn("Move to different section: entryIndex invalid for source array."); } } } populateResumeContent(); closeMoveCopyModal(); }
@@ -170,7 +281,71 @@ function togglePrintPreviewMode() { document.body.classList.toggle('print-previe
 function renderResumeSections() { const resumeSectionsDiv = document.getElementById('resume-sections'); resumeSectionsDiv.innerHTML = ''; dynamicSections.forEach(section => { const sectionDiv = document.createElement('div'); sectionDiv.classList.add('resume-section'); sectionDiv.id = `resume-section-${section.id}`; const titleDiv = document.createElement('div'); titleDiv.classList.add('section-title'); titleDiv.textContent = section.title; const contentDiv = document.createElement('div'); contentDiv.classList.add('section-content'); contentDiv.id = `content-${section.id}`; sectionDiv.appendChild(titleDiv); sectionDiv.appendChild(contentDiv); resumeSectionsDiv.appendChild(sectionDiv); }); populateResumeContent(); }
 function clearResumeContent() { if (confirm("Are you sure you want to clear all entries? This will also remove your saved version from the browser.")) { localStorage.removeItem(LOCAL_STORAGE_KEY); location.reload(); } }
 function toggleHeaderVisibility() { const visible = document.getElementById("toggleHeader").checked; const header = document.getElementById("resume-header"); if (header) header.style.display = visible ? "block" : "none"; }
-function updateHeader() { const name = document.getElementById("name").value; const address = document.getElementById("address").value; const email = document.getElementById("email").value; const phone = document.getElementById("phone").value; document.getElementById("resume-name").textContent = name; document.getElementById("resume-contact").textContent = `${address} | ${email} | ${phone}`; resumeContentData.header.name = name; resumeContentData.header.address = address; resumeContentData.header.email = email; resumeContentData.header.phone = phone; resumeContentData.header.customLinks = []; const linkInputsContainer = document.getElementById('header-links-input-container'); const linkGroups = linkInputsContainer.querySelectorAll('.header-link-input-group'); linkGroups.forEach(group => { const label = group.querySelector('.link-label-input').value.trim(); const url = group.querySelector('.link-url-input').value.trim(); const showQr = group.querySelector('.link-qr-toggle').checked; if (url) { resumeContentData.header.customLinks.push({ label: label || url, url: url, showQr: showQr }); } }); const resumeLinksDiv = document.getElementById("resume-header-links"); resumeLinksDiv.innerHTML = ''; if (resumeContentData.header.customLinks.length > 0) { const linksParagraph = document.createElement('p'); const qrCodeGenerationTasks = []; resumeContentData.header.customLinks.forEach((link, index) => { const linkItemSpan = document.createElement('span'); linkItemSpan.classList.add('header-link-item'); if (link.showQr) { const qrContainer = document.createElement('div'); qrContainer.classList.add('qr-code-container'); linkItemSpan.appendChild(qrContainer); qrCodeGenerationTasks.push({ element: qrContainer, url: link.url }); } const anchor = document.createElement('a'); anchor.href = link.url; anchor.textContent = link.label; anchor.target = "_blank"; linkItemSpan.appendChild(anchor); linksParagraph.appendChild(linkItemSpan); if (index < resumeContentData.header.customLinks.length - 1) { const separator = document.createElement('span'); separator.classList.add('link-separator'); separator.textContent = ' | '; linksParagraph.appendChild(separator); } }); resumeLinksDiv.appendChild(linksParagraph); if (typeof QRCode !== 'undefined') { qrCodeGenerationTasks.forEach(task => { try { new QRCode(task.element, { text: task.url, width: 45, height: 45, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H }); } catch (e) { console.error("Error generating QR code for:", task.url, e); task.element.textContent = '[QR Err]'; } }); } else { console.warn("QRCode library not loaded."); qrCodeGenerationTasks.forEach(task => { if(task.element) task.element.textContent = '[QR]'; }); } } }
+function updateHeaderDataFromInputs() {
+    resumeContentData.header.name = document.getElementById("name").value;
+    resumeContentData.header.address = document.getElementById("address").value;
+    resumeContentData.header.email = document.getElementById("email").value;
+    resumeContentData.header.phone = document.getElementById("phone").value;
+    resumeContentData.header.customLinks = [];
+    const linkInputsContainer = document.getElementById('header-links-input-container');
+    const linkGroups = linkInputsContainer.querySelectorAll('.header-link-input-group');
+    linkGroups.forEach(group => {
+        const label = group.querySelector('.link-label-input').value.trim();
+        const url = group.querySelector('.link-url-input').value.trim();
+        const showQr = group.querySelector('.link-qr-toggle').checked;
+        if (url) {
+            resumeContentData.header.customLinks.push({ label: label || url, url: url, showQr: showQr });
+        }
+    });
+}
+function updateHeader() {
+    updateHeaderDataFromInputs(); // Sync the data object
+    // Now render the visuals from the synced data object
+    document.getElementById("resume-name").textContent = resumeContentData.header.name;
+    document.getElementById("resume-contact").textContent = `${resumeContentData.header.address} | ${resumeContentData.header.email} | ${resumeContentData.header.phone}`;
+    const resumeLinksDiv = document.getElementById("resume-header-links");
+    resumeLinksDiv.innerHTML = '';
+    if (resumeContentData.header.customLinks.length > 0) {
+        const linksParagraph = document.createElement('p');
+        const qrCodeGenerationTasks = [];
+        resumeContentData.header.customLinks.forEach((link, index) => {
+            const linkItemSpan = document.createElement('span');
+            linkItemSpan.classList.add('header-link-item');
+            if (link.showQr) {
+                const qrContainer = document.createElement('div');
+                qrContainer.classList.add('qr-code-container');
+                linkItemSpan.appendChild(qrContainer);
+                qrCodeGenerationTasks.push({ element: qrContainer, url: link.url });
+            }
+            const anchor = document.createElement('a');
+            anchor.href = link.url;
+            anchor.textContent = link.label;
+            anchor.target = "_blank";
+            linkItemSpan.appendChild(anchor);
+            linksParagraph.appendChild(linkItemSpan);
+            if (index < resumeContentData.header.customLinks.length - 1) {
+                const separator = document.createElement('span');
+                separator.classList.add('link-separator');
+                separator.textContent = ' | ';
+                linksParagraph.appendChild(separator);
+            }
+        });
+        resumeLinksDiv.appendChild(linksParagraph);
+        if (typeof QRCode !== 'undefined') {
+            qrCodeGenerationTasks.forEach(task => {
+                try {
+                    new QRCode(task.element, { text: task.url, width: 45, height: 45, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H });
+                } catch (e) {
+                    console.error("Error generating QR code for:", task.url, e);
+                    task.element.textContent = '[QR Err]';
+                }
+            });
+        } else {
+            console.warn("QRCode library not loaded.");
+            qrCodeGenerationTasks.forEach(task => { if(task.element) task.element.textContent = '[QR]'; });
+        }
+    }
+}
 
 // --- START THE APP ---
 document.addEventListener('DOMContentLoaded', initializeResume);
