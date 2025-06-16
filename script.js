@@ -10,7 +10,6 @@ const LOCAL_STORAGE_KEY = 'resumeBuilderData';
 function saveToLocalStorage() {
     console.log("Saving current state to localStorage...");
     try {
-        // Before saving, ensure the header data is up-to-date from the input fields
         updateHeaderDataFromInputs(); 
         
         const dataToSave = {
@@ -54,7 +53,6 @@ async function initializeResume() {
 
     if (!loadedFromStorage) {
         console.log("Loading default data from JSON files...");
-        // --- FIX #1 PART 1: This block now correctly sets ALL default data ---
         dynamicSections = [
             { id: 'education', title: 'Education', type: 'education-entry' },
             { id: 'technical-skills', title: 'Technical Skills', type: 'paragraph' },
@@ -89,7 +87,6 @@ async function initializeResume() {
                 resumeContentData.sections[section.id] = fileDataMap[file][section.id] || [];
             });
 
-            // Set default header data ONLY when loading from JSON
             resumeContentData.header = {
                 name: 'Sara Sadek',
                 address: 'Rancho Santa Margarita, CA 92688',
@@ -106,15 +103,13 @@ async function initializeResume() {
         }
     }
     
-    // --- FIX #1 PART 2: Update the input fields from the data (either loaded or default) ---
     document.getElementById('name').value = resumeContentData.header.name || '';
     document.getElementById('address').value = resumeContentData.header.address || '';
     document.getElementById('email').value = resumeContentData.header.email || '';
     document.getElementById('phone').value = resumeContentData.header.phone || '';
-    renderHeaderLinkInputs(); // This will use resumeContentData.header.customLinks
+    renderHeaderLinkInputs();
     
-    // Initial render and setup
-    updateHeader(); // Renders the header visually from the now-correct data
+    updateHeader();
     renderResumeSections();
     populateSectionDropdowns();
     renderSectionRemovalList();
@@ -206,13 +201,13 @@ function populateResumeContent() {
         } else {
             entries.forEach((entry, entryIdx) => {
                 let entryWrapper;
-                // --- FIX #2: Corrected logic for building entry controls ---
                 let specificEntryControlsHtml = `<div class="entry-controls"><button class="entry-control-button" data-action="edit" title="Edit">✏️</button><button class="entry-control-button" data-action="remove" title="Remove">❌</button>`;
                 if (section.type === 'structured-entry' || section.type === 'education-entry') {
                     specificEntryControlsHtml += `<button class="entry-control-button" data-action="move-entry" title="Move Entry">➔</button><button class="entry-control-button" data-action="copy-entry" title="Copy Entry">❏</button>`;
                 }
                 specificEntryControlsHtml += `</div>`;
 
+                // --- FIX #2: Separated switch cases for clarity and correctness ---
                 switch (section.type) {
                     case 'education-entry':
                         entryWrapper = document.createElement('div'); entryWrapper.classList.add('job-entry'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx;
@@ -223,32 +218,23 @@ function populateResumeContent() {
                         contentDiv.appendChild(entryWrapper);
                         break;
                     case 'structured-entry':
-                    case 'list-item':
-                        entryWrapper = document.createElement('div');
-                        entryWrapper.classList.add(section.type === 'structured-entry' ? 'job-entry' : 'list-entry-item');
-                        entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx;
-                        if(section.type === 'structured-entry') {
-                            let strTitle = `<span>${processBolding(entry.position||'')}</span><span>${processBolding(entry.dates||'')}</span>`;
-                            let strLoc = `<span>${processBolding(entry.company||'')}</span><span>${processBolding(entry.location||'')}</span>`;
-                            entryWrapper.innerHTML = `<div class="job-title">${strTitle}</div><div class="location">${strLoc}</div>`;
-                        }
+                        entryWrapper = document.createElement('div'); entryWrapper.classList.add('job-entry'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx;
+                        let strTitle = `<span>${processBolding(entry.position||'')}</span><span>${processBolding(entry.dates||'')}</span>`;
+                        let strLoc = `<span>${processBolding(entry.company||'')}</span><span>${processBolding(entry.location||'')}</span>`;
+                        entryWrapper.innerHTML = `<div class="job-title">${strTitle}</div><div class="location">${strLoc}</div>`;
                         if (entry.bullets?.length > 0) {
                             const ulBullets = document.createElement('ul');
-                            entry.bullets.forEach((bulletItem, mainIdx) => {
-                                const li = document.createElement('li'); li.dataset.bulletPath = JSON.stringify([mainIdx]);
-                                const bulletText = typeof bulletItem === 'string' ? bulletItem : bulletItem.text;
-                                li.innerHTML = `<span class="bullet-text-content">${processBolding(bulletText)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`;
-                                if (typeof bulletItem === 'object' && bulletItem.subBullets?.length > 0) {
-                                    const subUl = document.createElement('ul');
-                                    bulletItem.subBullets.forEach((subTxt, subIdx) => {
-                                        const subLi = document.createElement('li'); subLi.dataset.bulletPath = JSON.stringify([mainIdx, subIdx]);
-                                        subLi.innerHTML = `<span class="bullet-text-content">${processBolding(subTxt)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`;
-                                        subUl.appendChild(subLi);
-                                    });
-                                    li.appendChild(subUl);
-                                }
-                                ulBullets.appendChild(li);
-                            });
+                            entry.bullets.forEach((bulletItem, mainIdx) => { const li = document.createElement('li'); li.dataset.bulletPath = JSON.stringify([mainIdx]); const bulletText = typeof bulletItem === 'string' ? bulletItem : bulletItem.text; li.innerHTML = `<span class="bullet-text-content">${processBolding(bulletText)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`; if (typeof bulletItem === 'object' && bulletItem.subBullets?.length > 0) { const subUl = document.createElement('ul'); bulletItem.subBullets.forEach((subTxt, subIdx) => { const subLi = document.createElement('li'); subLi.dataset.bulletPath = JSON.stringify([mainIdx, subIdx]); subLi.innerHTML = `<span class="bullet-text-content">${processBolding(subTxt)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`; subUl.appendChild(subLi); }); li.appendChild(subUl); } ulBullets.appendChild(li); });
+                            entryWrapper.appendChild(ulBullets);
+                        }
+                        entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml);
+                        contentDiv.appendChild(entryWrapper);
+                        break;
+                    case 'list-item':
+                        entryWrapper = document.createElement('div'); entryWrapper.classList.add('list-entry-item'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx;
+                        if (entry.bullets?.length > 0) {
+                            const ulBullets = document.createElement('ul');
+                            entry.bullets.forEach((bulletItem, mainIdx) => { const li = document.createElement('li'); li.dataset.bulletPath = JSON.stringify([mainIdx]); const bulletText = typeof bulletItem === 'string' ? bulletItem : bulletItem.text; li.innerHTML = `<span class="bullet-text-content">${processBolding(bulletText)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`; if (typeof bulletItem === 'object' && bulletItem.subBullets?.length > 0) { const subUl = document.createElement('ul'); bulletItem.subBullets.forEach((subTxt, subIdx) => { const subLi = document.createElement('li'); subLi.dataset.bulletPath = JSON.stringify([mainIdx, subIdx]); subLi.innerHTML = `<span class="bullet-text-content">${processBolding(subTxt)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`; subUl.appendChild(subLi); }); li.appendChild(subUl); } ulBullets.appendChild(li); });
                             entryWrapper.appendChild(ulBullets);
                         }
                         entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml);
@@ -279,73 +265,10 @@ function closeMoveCopyModal() { const modal = document.getElementById('move-copy
 function performMoveCopyEntry() { if (!moveCopyContext) return; const { sourceSectionId, entryIndex, actionType, entryType } = moveCopyContext; const targetSectionId = document.getElementById('move-copy-target-section').value; if (!targetSectionId) { alert("Please select a target section."); return; } if (entryType === 'coursework-list') { closeMoveCopyModal(); return; } const sourceSectionDataArray = resumeContentData.sections[sourceSectionId]; if (!sourceSectionDataArray || sourceSectionDataArray[entryIndex] === undefined) { console.error("Source entry not found for move/copy operation at index:", entryIndex); closeMoveCopyModal(); return; } let entryToProcess = JSON.parse(JSON.stringify(sourceSectionDataArray[entryIndex])); if (entryToProcess.hasOwnProperty('sortDate') && typeof entryToProcess.sortDate === 'string') { const parsedDate = new Date(entryToProcess.sortDate); if (!isNaN(parsedDate)) entryToProcess.sortDate = parsedDate; else { console.warn("Failed to parse date string during move/copy, defaulting:", entryToProcess.sortDate); entryToProcess.sortDate = new Date(0); } } else if (entryToProcess.hasOwnProperty('sortDate') && !(entryToProcess.sortDate instanceof Date)) { console.warn("sortDate was not a string or Date after stringify/parse, defaulting."); entryToProcess.sortDate = new Date(0); } if (!resumeContentData.sections[targetSectionId]) { resumeContentData.sections[targetSectionId] = []; } const targetArray = resumeContentData.sections[targetSectionId]; if (actionType === 'copy-entry') { if (targetSectionId === sourceSectionId && typeof entryIndex === 'number' && entryIndex < targetArray.length) { targetArray.splice(entryIndex + 1, 0, entryToProcess); } else { targetArray.push(entryToProcess); } } else { targetArray.push(entryToProcess); if (sourceSectionId === targetSectionId) { const originalSourceArray = resumeContentData.sections[sourceSectionId]; if (typeof entryIndex === 'number' && entryIndex < originalSourceArray.length) { originalSourceArray.splice(entryIndex, 1); } else { console.warn("Move within same section: original entryIndex invalid after push or was initially invalid."); } } else { if (typeof entryIndex === 'number' && entryIndex < sourceSectionDataArray.length) { sourceSectionDataArray.splice(entryIndex, 1); } else { console.warn("Move to different section: entryIndex invalid for source array."); } } } populateResumeContent(); closeMoveCopyModal(); }
 function togglePrintPreviewMode() { document.body.classList.toggle('print-preview-mode'); const button = document.getElementById('toggle-print-preview-button'); if (document.body.classList.contains('print-preview-mode')) { button.textContent = 'Exit Print-Friendly View'; document.querySelector('.resume-area').scrollTop = 0; const resumeName = document.getElementById('resume-name').textContent; document.title = resumeName && resumeName.trim() !== '' ? `${resumeName} - Resume` : "Resume"; } else { button.textContent = 'Toggle Print-Friendly View'; document.title = originalDocumentTitle; } }
 function renderResumeSections() { const resumeSectionsDiv = document.getElementById('resume-sections'); resumeSectionsDiv.innerHTML = ''; dynamicSections.forEach(section => { const sectionDiv = document.createElement('div'); sectionDiv.classList.add('resume-section'); sectionDiv.id = `resume-section-${section.id}`; const titleDiv = document.createElement('div'); titleDiv.classList.add('section-title'); titleDiv.textContent = section.title; const contentDiv = document.createElement('div'); contentDiv.classList.add('section-content'); contentDiv.id = `content-${section.id}`; sectionDiv.appendChild(titleDiv); sectionDiv.appendChild(contentDiv); resumeSectionsDiv.appendChild(sectionDiv); }); populateResumeContent(); }
-function clearResumeContent() { if (confirm("Are you sure you want to clear all entries? This will also remove your saved version from the browser.")) { localStorage.removeItem(LOCAL_STORAGE_KEY); location.reload(); } }
+function clearResumeContent() { if (confirm("This will clear all entries and remove your saved version from the browser. The page will reload with the default data. Are you sure?")) { localStorage.removeItem(LOCAL_STORAGE_KEY); location.reload(); } }
 function toggleHeaderVisibility() { const visible = document.getElementById("toggleHeader").checked; const header = document.getElementById("resume-header"); if (header) header.style.display = visible ? "block" : "none"; }
-function updateHeaderDataFromInputs() {
-    resumeContentData.header.name = document.getElementById("name").value;
-    resumeContentData.header.address = document.getElementById("address").value;
-    resumeContentData.header.email = document.getElementById("email").value;
-    resumeContentData.header.phone = document.getElementById("phone").value;
-    resumeContentData.header.customLinks = [];
-    const linkInputsContainer = document.getElementById('header-links-input-container');
-    const linkGroups = linkInputsContainer.querySelectorAll('.header-link-input-group');
-    linkGroups.forEach(group => {
-        const label = group.querySelector('.link-label-input').value.trim();
-        const url = group.querySelector('.link-url-input').value.trim();
-        const showQr = group.querySelector('.link-qr-toggle').checked;
-        if (url) {
-            resumeContentData.header.customLinks.push({ label: label || url, url: url, showQr: showQr });
-        }
-    });
-}
-function updateHeader() {
-    updateHeaderDataFromInputs(); // Sync the data object
-    // Now render the visuals from the synced data object
-    document.getElementById("resume-name").textContent = resumeContentData.header.name;
-    document.getElementById("resume-contact").textContent = `${resumeContentData.header.address} | ${resumeContentData.header.email} | ${resumeContentData.header.phone}`;
-    const resumeLinksDiv = document.getElementById("resume-header-links");
-    resumeLinksDiv.innerHTML = '';
-    if (resumeContentData.header.customLinks.length > 0) {
-        const linksParagraph = document.createElement('p');
-        const qrCodeGenerationTasks = [];
-        resumeContentData.header.customLinks.forEach((link, index) => {
-            const linkItemSpan = document.createElement('span');
-            linkItemSpan.classList.add('header-link-item');
-            if (link.showQr) {
-                const qrContainer = document.createElement('div');
-                qrContainer.classList.add('qr-code-container');
-                linkItemSpan.appendChild(qrContainer);
-                qrCodeGenerationTasks.push({ element: qrContainer, url: link.url });
-            }
-            const anchor = document.createElement('a');
-            anchor.href = link.url;
-            anchor.textContent = link.label;
-            anchor.target = "_blank";
-            linkItemSpan.appendChild(anchor);
-            linksParagraph.appendChild(linkItemSpan);
-            if (index < resumeContentData.header.customLinks.length - 1) {
-                const separator = document.createElement('span');
-                separator.classList.add('link-separator');
-                separator.textContent = ' | ';
-                linksParagraph.appendChild(separator);
-            }
-        });
-        resumeLinksDiv.appendChild(linksParagraph);
-        if (typeof QRCode !== 'undefined') {
-            qrCodeGenerationTasks.forEach(task => {
-                try {
-                    new QRCode(task.element, { text: task.url, width: 45, height: 45, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H });
-                } catch (e) {
-                    console.error("Error generating QR code for:", task.url, e);
-                    task.element.textContent = '[QR Err]';
-                }
-            });
-        } else {
-            console.warn("QRCode library not loaded.");
-            qrCodeGenerationTasks.forEach(task => { if(task.element) task.element.textContent = '[QR]'; });
-        }
-    }
-}
+function updateHeaderDataFromInputs() { resumeContentData.header.name = document.getElementById("name").value; resumeContentData.header.address = document.getElementById("address").value; resumeContentData.header.email = document.getElementById("email").value; resumeContentData.header.phone = document.getElementById("phone").value; resumeContentData.header.customLinks = []; const linkInputsContainer = document.getElementById('header-links-input-container'); const linkGroups = linkInputsContainer.querySelectorAll('.header-link-input-group'); linkGroups.forEach(group => { const label = group.querySelector('.link-label-input').value.trim(); const url = group.querySelector('.link-url-input').value.trim(); const showQr = group.querySelector('.link-qr-toggle').checked; if (url) { resumeContentData.header.customLinks.push({ label: label || url, url: url, showQr: showQr }); } }); }
+function updateHeader() { updateHeaderDataFromInputs(); document.getElementById("resume-name").textContent = resumeContentData.header.name; document.getElementById("resume-contact").textContent = `${resumeContentData.header.address} | ${resumeContentData.header.email} | ${resumeContentData.header.phone}`; const resumeLinksDiv = document.getElementById("resume-header-links"); resumeLinksDiv.innerHTML = ''; if (resumeContentData.header.customLinks.length > 0) { const linksParagraph = document.createElement('p'); const qrCodeGenerationTasks = []; resumeContentData.header.customLinks.forEach((link, index) => { const linkItemSpan = document.createElement('span'); linkItemSpan.classList.add('header-link-item'); if (link.showQr) { const qrContainer = document.createElement('div'); qrContainer.classList.add('qr-code-container'); linkItemSpan.appendChild(qrContainer); qrCodeGenerationTasks.push({ element: qrContainer, url: link.url }); } const anchor = document.createElement('a'); anchor.href = link.url; anchor.textContent = link.label; anchor.target = "_blank"; linkItemSpan.appendChild(anchor); linksParagraph.appendChild(linkItemSpan); if (index < resumeContentData.header.customLinks.length - 1) { const separator = document.createElement('span'); separator.classList.add('link-separator'); separator.textContent = ' | '; linksParagraph.appendChild(separator); } }); resumeLinksDiv.appendChild(linksParagraph); if (typeof QRCode !== 'undefined') { qrCodeGenerationTasks.forEach(task => { try { new QRCode(task.element, { text: task.url, width: 45, height: 45, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H }); } catch (e) { console.error("Error generating QR code for:", task.url, e); task.element.textContent = '[QR Err]'; } }); } else { console.warn("QRCode library not loaded."); qrCodeGenerationTasks.forEach(task => { if(task.element) task.element.textContent = '[QR]'; }); } } }
 
 // --- START THE APP ---
 document.addEventListener('DOMContentLoaded', initializeResume);
