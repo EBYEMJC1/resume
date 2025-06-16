@@ -1,0 +1,333 @@
+/* --- Builder Layout Styles --- */
+body { font-family: Arial, sans-serif; margin: 0; padding: 0; line-height: 1.2; font-size: 14px; display: flex; min-height: 100vh; }
+.builder-container { display: flex; width: 100%; max-width: 1400px; margin: 0 auto; padding: 10px; box-sizing: border-box; }
+.input-area { width: 45%; padding-right: 20px; overflow-y: auto; box-sizing: border-box; max-height: calc(100vh - 20px); }
+.resume-area { width: 55%; border-left: 1px solid #ccc; padding-left: 20px; box-sizing: border-box; overflow-y: auto; max-height: calc(100vh - 20px); }
+
+/* Input Sections */
+.input-section { margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9; }
+.input-section h3 { margin-top: 0; margin-bottom: 10px; border-bottom: 1px dashed #ccc; padding-bottom: 5px; }
+.input-section label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 12px; }
+.input-section input[type="text"], .input-section input[type="email"], .input-section input[type="tel"], .input-section textarea, .input-section select { width: calc(100% - 12px); padding: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
+.input-section textarea { resize: vertical; }
+.input-section button { display: inline-block; background-color: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 5px; margin-right: 5px; }
+.input-section button:hover { background-color: #0056b3; }
+.input-section #save-json-button { background-color: #ffc107; color: #212529; }
+.input-section #save-json-button:hover { background-color: #e0a800; }
+.input-section .remove-button { background-color: #dc3545; margin-left: 5px; }
+.input-section .remove-button:hover { background-color: #c82333; }
+.input-section .cancel-button { background-color: #6c757d; }
+.input-section .cancel-button:hover { background-color: #5a6268; }
+
+/* Header Link Inputs */
+.header-link-input-group { display: flex; align-items: center; margin-bottom: 8px; gap: 5px; }
+.header-link-input-group input[type="text"] { flex-grow: 1; margin-bottom: 0; }
+.header-link-input-group input.link-label-input { width: 25%; }
+.header-link-input-group input.link-url-input { width: 45%; }
+.header-link-input-group .link-qr-toggle-label { font-size: 11px; display: flex; align-items: center; white-space: nowrap; cursor: pointer; }
+.header-link-input-group .link-qr-toggle { margin-right: 3px; width: auto; margin-bottom:0; vertical-align: middle; }
+.header-link-input-group .remove-link-button {
+    background-color: #dc3545; color: white; font-size: 10px; padding: 4px 6px;
+    height: auto; line-height: 1; margin-left: 0; margin-top:0;
+}
+ .add-link-button { background-color: #28a745 !important; }
+
+/* Coursework Input Form */
+.add-course-fields { display: flex; flex-wrap: wrap; gap:10px; align-items: flex-end; margin-bottom:10px; }
+.add-course-fields > div { display:flex; flex-direction: column; }
+.add-course-fields label { margin-bottom: 2px;}
+.add-course-fields input[type="text"] { margin-bottom: 0; }
+.add-course-fields .course-name-field { flex-grow: 2;}
+.add-course-fields .course-grade-field { flex-grow: 1;}
+.add-course-fields .course-show-grade-field { align-self: flex-end; padding-bottom: 5px; }
+
+/* Bullet Inputs in Form */
+.bullet-inputs { margin-top: 10px; padding: 10px; border: 1px dashed #ccc; border-radius: 3px; background-color: #fff; }
+.bullet-inputs > label { font-weight: normal; }
+.bullet-item {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+    padding-left: 5px;
+    border-left: 2px solid #e0e0e0;
+}
+.main-bullet-controls {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 3px;
+}
+.main-bullet-controls input.main-bullet-input { flex-grow: 1; margin-right: 5px; }
+
+.sub-bullet-item-container {
+    padding-left: 25px;
+}
+.sub-bullet-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 3px;
+}
+.sub-bullet-item input.sub-bullet-input { flex-grow: 1; margin-right: 5px;}
+
+
+.bullet-inputs .add-bullet-button {
+    background-color: #28a745; margin-right: 5px; font-size: 12px; padding: 5px 8px; display: block; margin-top:10px;
+}
+.bullet-inputs .add-sub-bullet-button {
+    background-color: #17a2b8; margin-left: 5px; font-size: 10px; padding: 2px 5px; line-height: 1;
+}
+
+.bullet-inputs .remove-bullet-button,
+.bullet-inputs .remove-sub-bullet-button {
+    background-color: #dc3545; color:white; flex-shrink: 0; padding: 2px 5px; font-size: 10px; height: 22px; line-height: 1; border:none; border-radius:3px; cursor:pointer;
+}
+.bullet-inputs .remove-bullet-button:hover,
+.bullet-inputs .remove-sub-bullet-button:hover { background-color: #c82333; }
+
+
+.bullet-guide, .bullet-feedback-area { font-size: 10px; color: #555; margin-bottom: 10px; }
+.bullet-feedback-item { font-size: 10px; margin-top: -8px; margin-bottom: 8px; display: none; }
+.bullet-feedback-item.show { display: block; }
+.bullet-feedback-item .info { color: #007bff; }
+.bullet-feedback-item .warning { color: #ffc107; }
+.bullet-feedback-item .error { color: #dc3545; }
+
+
+/* Section Management List */
+#section-remove-list { list-style: none; padding: 0; margin-top: 10px; }
+#section-remove-list li { margin-bottom: 5px; padding: 5px; border: 1px solid #eee; background-color: #fff; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+#section-remove-list li .section-name { flex-grow: 1; }
+#section-remove-list li button { margin-top: 0; padding: 2px 8px; margin-left: 3px; }
+.order-button { font-size: 10px; padding: 2px 5px !important; line-height: 1; }
+#section-remove-list li .edit-title-button {
+    background-color: #ffc107;
+    color: #212529;
+    margin-right: 3px;
+    font-size: 10px;
+    padding: 2px 5px;
+    line-height: 1;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+#section-remove-list li .edit-title-button:hover {
+    background-color: #e0a800;
+}
+
+
+.date-required label::after { content: "*"; color: red; margin-left: 2px; }
+.date-guide { font-size: 10px; color: #555; margin-top: -8px; margin-bottom: 10px; }
+
+/* Resume Display */
+.resume-area .container { max-width: 100%; margin: 0; padding: 0; font-size: 11px; line-height: 1.1; position: relative; }
+.resume-section { margin-top: 10px; position: relative; }
+.resume-section .section-title { font-weight: bold; font-size: 13px; margin-top: 0; border-bottom: 1px solid #000; padding-bottom: 2px; margin-bottom: 4px; }
+.resume-area .header { text-align: center; margin-bottom: 6px; }
+.resume-area .header h1 { margin: 0; font-size: 16px; }
+.resume-area .header p { margin: 1px 0; font-size: 11px; }
+
+#resume-header-links p {
+    margin: 3px 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+.header-link-item {
+    display: inline-flex;
+    align-items: center;
+    margin: 2px 5px;
+    vertical-align: middle;
+}
+.qr-code-container {
+    width: 45px;
+    height: 45px;
+    margin-right: 5px;
+    display: inline-block;
+    vertical-align: middle;
+}
+.qr-code-container img, .qr-code-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain;
+    display: block;
+}
+.header-link-item a {
+    vertical-align: middle;
+}
+.link-separator {
+     margin: 0 3px;
+     vertical-align: middle;
+}
+
+/* Coursework Display */
+.coursework-list-preview-wrapper {
+     position: relative;
+}
+.coursework-list-preview {
+    list-style: none;
+    padding-left: 0;
+    margin-left: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between; /* Distributes space between items */
+    align-items: baseline;
+    row-gap: 4px; /* Vertical space between wrapped lines */
+    margin-top: 0px;
+    line-height: 1.4;
+}
+.coursework-list-preview li {
+    position: relative;
+    padding-right: 30px; /* Space for on-hover controls */
+    display: inline-flex;
+    align-items: baseline;
+    margin-right: 12px; /* Adds space between items */
+}
+.coursework-list-preview li::before {
+    content: "•"; /* This adds the bullet point */
+    margin-right: 6px; /* Space between bullet and course name */
+    font-weight: bold;
+}
+.coursework-list-preview li:hover { background-color: #f0f8ff; cursor: pointer;}
+.coursework-list-preview li .course-grade-display {
+    font-size: 0.9em;
+    color: #555;
+    margin-left: 4px;
+    white-space: nowrap;
+}
+.course-item-controls {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: none;
+    gap: 3px;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 1px 2px;
+    border-radius: 3px;
+}
+.coursework-list-preview li:hover .course-item-controls { display: inline-flex; }
+
+.course-item-controls .control-btn {
+    font-size: 10px; color: #aaa; cursor: pointer; padding: 0 2px; line-height: 1;
+}
+.course-item-controls .control-btn.edit:hover { color: #007bff; }
+.course-item-controls .control-btn.remove:hover { color: red; }
+
+
+/* Job Entry, List Entry Item, and now Paragraph Entry share some characteristics */
+.resume-section .section-content .job-entry,
+.resume-section .section-content .list-entry-item,
+.resume-section .section-content .paragraph-entry {
+    margin-top: 8px; position: relative; padding-right: 95px;
+}
+.resume-section .section-content .job-entry:first-child,
+.resume-section .section-content .list-entry-item:first-child,
+.resume-section .section-content .paragraph-entry:first-child { margin-top: 0; }
+
+.entry-controls { position: absolute; top: 0; right: 0; display: flex; gap: 3px; z-index: 10; }
+.entry-control-button { background: #f0f0f0; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; font-size: 10px; padding: 1px 3px; line-height: 1; }
+.entry-control-button:hover { background: #e0e0e0; }
+
+.resume-section .section-content .job-title { font-weight: bold; display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 0; margin-top: 0; }
+.resume-section .section-content .location { font-style: italic; display: flex; justify-content: space-between; font-size: 11px; margin-top: 0; margin-bottom: 2px; }
+
+.resume-section .section-content .job-entry ul,
+.resume-section .section-content .list-entry-item ul {
+    list-style-type: disc; margin-left: 10px; font-size: 11px; padding-left: 5px; margin-top: 2px; margin-bottom: 0;
+}
+.resume-section .section-content .job-entry ul ul,
+.resume-section .section-content .list-entry-item ul ul {
+    list-style-type: circle; margin-left: 15px; margin-top: 1px;
+}
+
+.resume-section .section-content .job-entry li,
+.resume-section .section-content .list-entry-item li {
+    margin-bottom: 1px; position: relative; padding-right: 40px;
+}
+
+.resume-section .section-content li:hover .bullet-control-btn { display: inline; }
+.resume-section .section-content li .bullet-text-content:hover { background-color: #f0f8ff; cursor: pointer; }
+
+.resume-section .section-content .paragraph-entry .paragraph-content-display {
+    cursor: pointer; margin: 1px 0; margin-top: 3px;
+    padding-right: 0;
+}
+.resume-section .section-content .paragraph-entry .paragraph-content-display:hover { background-color: #f0f8ff; }
+
+
+.bullet-control-btn {
+    font-size: 10px; color: #aaa; cursor: pointer; padding: 0 2px; display: none; line-height: 1;
+    margin-left: 5px;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+.bullet-control-btn.edit { right: 18px; }
+.bullet-control-btn.remove:hover { color: red; }
+.bullet-control-btn.edit:hover { color: #007bff; }
+
+.resume-section .section-content p { margin: 1px 0; margin-top: 3px; }
+
+/* Move/Copy Modal Styles */
+#move-copy-modal {
+    display: none; position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white; border: 1px solid #ccc;
+    padding: 20px; z-index: 1000; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    min-width: 300px; border-radius: 5px;
+}
+#move-copy-modal h4 { margin-top: 0; }
+#move-copy-modal label { font-weight: normal; font-size: 13px; margin-bottom: 8px; }
+#move-copy-modal select { width: 100%; margin-bottom: 15px; padding: 8px; font-size: 13px; }
+#move-copy-modal button { font-size: 13px; padding: 8px 15px; }
+
+/* Print Preview Mode Styles */
+body.print-preview-mode .entry-controls,
+body.print-preview-mode .bullet-control-btn,
+body.print-preview-mode .order-button,
+body.print-preview-mode #section-remove-list .remove-button,
+body.print-preview-mode #section-remove-list .edit-title-button,
+body.print-preview-mode .input-section button:not(#toggle-print-preview-button),
+body.print-preview-mode .add-link-button,
+body.print-preview-mode .remove-link-button,
+body.print-preview-mode .link-qr-toggle-label,
+body.print-preview-mode .course-item-controls
+{
+    display: none !important;
+}
+
+/* Print Styles */
+@media print {
+     body { font-size: 10px; line-height: 1; display: block; }
+     .builder-container { display: block; width: 100%; max-width: 100%; padding: 0; margin: 0; }
+     .input-area, #move-copy-modal, #toggle-print-preview-button, .input-section h3:has(~ #toggle-print-preview-button) + p,
+     .add-link-button, .remove-link-button, .link-qr-toggle-label, .course-item-controls
+     { display: none !important; }
+     .resume-area { width: 100%; border-left: none; padding-left: 0; overflow-y: visible; }
+     .resume-area .container { font-size: 10px; line-height: 1; }
+     .entry-controls, .bullet-control-btn, .edit-title-button { display: none !important; }
+     .resume-section .section-content .job-entry,
+     .resume-section .section-content .list-entry-item,
+     .resume-section .section-content .paragraph-entry,
+     .resume-section .section-content .coursework-list-preview li,
+     .resume-section .section-content li { padding-right: 0 !important; }
+     .resume-area .header { margin-bottom: 4px; } .resume-area .header p { margin: 0; }
+     #resume-header-links .qr-code-container { width: 40px; height: 40px; margin-right: 4px;}
+     .resume-section { margin-top: 8px; } .resume-section .section-title { margin-bottom: 2px; padding-bottom: 1px;}
+     .resume-section .section-content .job-entry,
+     .resume-section .section-content .list-entry-item,
+     .resume-section .section-content .paragraph-entry,
+     .resume-section .section-content .coursework-list-preview { margin-top: 3px;}
+     .resume-section .section-content .job-entry:first-child,
+     .resume-section .section-content .list-entry-item:first-child,
+     .resume-section .section-content .paragraph-entry:first-child,
+     .resume-section .section-content .coursework-list-preview:first-child { margin-top: 0;}
+     .resume-section .section-content .job-title { margin-top: 2px; margin-bottom: 0; } .resume-section .section-content .location { margin-top: 0; margin-bottom: 1px; }
+     .resume-section .section-content ul { margin-left: 8px; padding-left: 4px; margin-top: 0; margin-bottom: 0; }
+     .resume-section .section-content li { margin-bottom: 0; } .resume-section .section-content p { margin: 0; margin-top: 2px;}
+     .resume-section, .resume-section .section-content .job-entry,
+     .resume-section .section-content .list-entry-item,
+     .resume-section .section-content .paragraph-entry,
+     .resume-section .section-content .coursework-list-preview { page-break-inside: avoid; }
+}
