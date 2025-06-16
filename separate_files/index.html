@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Interactive Resume Builder</title>
+    <!-- Link to the external CSS file -->
+    <link rel="stylesheet" href="style.css">
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+</head>
+<body>
+<div class="builder-container">
+<div class="input-area">
+    <h2>Resume Builder</h2>
+    <!-- Header Info Section -->
+    <div class="input-section">
+        <h3>Header Info</h3>
+        <label for="name">Name:</label><input id="name" placeholder="Your Name" type="text"/>
+        <label for="address">Address:</label><input id="address" placeholder="City, State Zip" type="text"/>
+        <label for="email">Email:</label><input id="email" placeholder="email@example.com" type="email"/>
+        <label for="phone">Phone:</label><input id="phone" placeholder="(XXX) XXX-XXXX" type="tel"/>
+
+        <label style="margin-top:15px;">Custom Links: (QR codes are 45x45px)</label>
+        <div id="header-links-input-container">
+            <!-- Link input groups will be added here by JavaScript -->
+        </div>
+        <button type="button" class="add-link-button" onclick="addHeaderLinkInput('', '', false); updateHeader();">+ Add Link</button>
+
+        <button onclick="updateHeader()" style="margin-top: 20px; display: block;">Update Header Manually</button>
+        <div><label style="font-size: 12px; margin-top: 8px;"><input type="checkbox" id="toggleHeader" checked onchange="toggleHeaderVisibility()"> Show Header</label></div>
+    </div>
+    <!-- Section Management -->
+    <div class="input-section">
+        <h3>Section Management</h3>
+        <label for="new-section-title">New Section Title:</label><input id="new-section-title" placeholder="e.g. Projects, Awards" type="text"/>
+        <label for="new-section-type">Section Type:</label>
+        <select id="new-section-type">
+            <option value="structured-entry">Structured Entry (Experience, Projects)</option>
+            <option value="list-item">List Item (Activities, Awards - supports bullets)</option>
+            <option value="paragraph">Paragraph (Skills, Summary)</option>
+            <option value="education-entry">Education Entry</option>
+            <option value="coursework-list">Relevant Coursework (Flowing List)</option>
+        </select>
+        <button onclick="addSection()">Add New Section</button>
+        <h4>Manage Sections</h4><ul id="section-remove-list"></ul>
+    </div>
+    <!-- Coursework Entry Form -->
+    <div class="input-section" id="add-coursework-section-form">
+        <h3>Add/Edit Relevant Coursework</h3>
+        <label for="coursework-section-select">Select Section:</label>
+        <select class="section-select" id="coursework-section-select" onchange="cancelEdit('coursework')"></select>
+
+        <div class="add-course-fields">
+            <div class="course-name-field">
+                <label for="coursework-name-new">Course Name:</label>
+                <input type="text" id="coursework-name-new" placeholder="e.g., Data Structures">
+            </div>
+            <div class="course-grade-field">
+                <label for="coursework-grade-new">Grade (Optional):</label>
+                <input type="text" id="coursework-grade-new" placeholder="e.g., A">
+            </div>
+            <div class="course-show-grade-field">
+                <label><input type="checkbox" id="coursework-show-grade-new"> Show Grade</label>
+            </div>
+        </div>
+        <button type="button" id="coursework-submit-button" onclick="addCourseworkEntryForm()">Add Course</button>
+        <button id="coursework-cancel-button" class="cancel-button" onclick="cancelEdit('coursework')" style="display:none;">Cancel Update</button>
+         <p style="font-size:10px; color: #555; margin-top:10px;">To edit or remove individual courses, use the ✏️ and ❌ icons that appear on hover in the resume preview.</p>
+    </div>
+    <!-- Education Entry Form -->
+    <div class="input-section" id="add-education-section">
+        <h3>Add Education Entry</h3>
+        <label for="edu-section-select">Select Section:</label><select class="section-select" id="edu-section-select"></select>
+        <label for="edu-degree">Degree:</label><input id="edu-degree" type="text"/>
+        <label for="edu-institution">Institution:</label><input id="edu-institution" type="text"/>
+        <label class="date-required" for="edu-date">End Date:</label><input id="edu-date" type="text"/>
+        <p class="date-guide">Format: "Month YYYY" or "YYYY". For ranges, the end date is used for sorting.</p>
+        <label for="edu-gpa">GPA:</label><input id="edu-gpa" type="text"/>
+        <label for="edu-expected">Additional Line (Optional):</label><input id="edu-expected" type="text"/>
+        <button id="education-submit-button" onclick="addEducationEntryForm()">Add Entry</button>
+        <button id="education-cancel-button" class="cancel-button" onclick="cancelEdit('education')" style="display:none;">Cancel</button>
+    </div>
+    <!-- Paragraph/Skills Form -->
+    <div class="input-section" id="add-paragraph-section">
+        <h3>Add/Set Paragraph Content</h3>
+        <label for="para-section-select">Select Section:</label><select class="section-select" id="para-section-select"></select>
+        <label for="skills-content">Paragraph Content:</label><textarea id="skills-content" rows="3"></textarea>
+        <p style="font-size: 10px; color:#555; margin-top: 5px;">Not sorted by date. Use **text** for bolding. Copying a paragraph entry to the same section will add it as a new block.</p>
+        <button id="paragraph-submit-button" onclick="setParagraphContentForm()">Set Content</button>
+        <button id="paragraph-cancel-button" class="cancel-button" onclick="cancelEdit('paragraph')" style="display:none;">Cancel</button>
+    </div>
+    <!-- Structured Entry (Experience/Projects) Form -->
+    <div class="input-section" id="add-structured-section">
+        <h3>Add Structured Entry</h3>
+        <label for="structured-section-select">Select Section:</label><select class="section-select" id="structured-section-select"></select>
+        <label for="structured-position">Position/Title:</label><input id="structured-position" type="text"/>
+        <label for="structured-company">Company:</label><input id="structured-company" type="text"/>
+        <label for="structured-location">Location:</label><input id="structured-location" type="text"/>
+        <label class="date-required" for="structured-dates">Dates:</label><input id="structured-dates" type="text"/>
+        <p class="date-guide">Format: "Mon YYYY - Mon YYYY", "YYYY - YYYY", "Month YYYY", "YYYY", or "... - Present". End date is used for sorting.</p>
+        <div class="bullet-inputs" id="structured-bullets-container">
+            <label style="font-weight:bold; display:block; margin-bottom:5px;">Details/Bullets:</label>
+            <div class="bullet-guide">
+                Use **text** for bolding. Start with action verbs. Include metrics.
+            </div>
+            <div class="bullet-feedback-area">
+            </div>
+        </div>
+        <button class="add-bullet-button" onclick="addMainBulletInputForm('structured-bullets-container', '')" type="button">Add Main Bullet</button>
+        <button id="structured-submit-button" onclick="addStructuredEntryForm()">Add Entry</button>
+        <button id="structured-cancel-button" class="cancel-button" onclick="cancelEdit('structured')" style="display:none;">Cancel</button>
+    </div>
+    <!-- List Item (Activities/Awards) Form -->
+    <div class="input-section" id="add-list-section">
+        <h3>Add List Item Entry</h3>
+        <label for="list-section-select">Select Section:</label><select class="section-select" id="list-section-select"></select>
+
+        <div class="bullet-inputs" id="list-bullets-container">
+            <label style="font-weight:bold; display:block; margin-bottom:5px;">Details/Bullets:</label>
+            <div class="bullet-guide">
+                Use **text** for bolding. Include date in the first main bullet for sorting (e.g., "Activity | Mon YYYY - Present").
+            </div>
+            <div class="bullet-feedback-area">
+            </div>
+        </div>
+        <button class="add-bullet-button" onclick="addMainBulletInputForm('list-bullets-container', '')" type="button">Add Main Bullet</button>
+
+        <p class="date-guide" style="margin-top: 10px;">Include date in the first main bullet for sorting (e.g., "Activity Name | Month YYYY"). Use **text** for bolding.</p>
+        <button id="list-submit-button" onclick="addListItemForm()">Add Item</button>
+        <button id="list-cancel-button" class="cancel-button" onclick="cancelEdit('list')" style="display:none;">Cancel</button>
+    </div>
+    <!-- Reset/Clear -->
+    <div class="input-section">
+        <h3>Save & Reset</h3>
+        <p style="font-size: 10px; color:#555;">Save your changes to the JSON files, clear entries, or reset the entire builder.</p>
+        <button id="save-json-button" onclick="saveAllSections()">Save Changes to JSON</button>
+        <button onclick="clearResumeContent()">Clear All Entries</button>
+        <button onclick="location.reload()">Reset Builder</button>
+    </div>
+     <!-- Print Options -->
+    <div class="input-section">
+        <h3>Print Options</h3>
+        <button id="toggle-print-preview-button" onclick="togglePrintPreviewMode()">Toggle Print-Friendly View</button>
+        <p style="font-size: 10px; color:#555; line-height: 1.5;">
+            <strong>Important for Printing:</strong> To get a clean printout, open your browser's Print dialog (Ctrl+P) and in "More settings," <strong>uncheck the "Headers and footers" option</strong>.
+        </p>
+    </div>
+</div>
+<div class="resume-area">
+    <div class="container">
+        <div class="header" id="resume-header">
+            <h1 id="resume-name"></h1>
+            <p><span id="resume-contact"></span></p>
+            <div id="resume-header-links"></div>
+        </div>
+        <div id="resume-sections"></div>
+    </div>
+</div>
+</div>
+
+<!-- Move/Copy Modal -->
+<div id="move-copy-modal">
+    <h4 id="move-copy-modal-title">Move/Copy Entry</h4>
+    <label for="move-copy-target-section">Select target section:</label>
+    <select id="move-copy-target-section"></select>
+    <button id="move-copy-confirm">Confirm</button>
+    <button id="move-copy-cancel" class="cancel-button">Cancel</button>
+</div>
+
+<!-- Link to the external JavaScript file -->
+<script src="script.js"></script>
+</body>
+</html>
