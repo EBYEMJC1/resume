@@ -130,13 +130,13 @@
         <button id="list-submit-button" onclick="addListItemForm()">Add Item</button>
         <button id="list-cancel-button" class="cancel-button" onclick="cancelEdit('list')" style="display:none;">Cancel</button>
     </div>
-    <!-- Reset/Clear -->
+    <!-- Save & Reset -->
     <div class="input-section">
         <h3>Save & Reset</h3>
-        <p style="font-size: 10px; color:#555;">Save your changes to the JSON files, clear entries, or reset the entire builder.</p>
-        <button id="save-json-button" onclick="saveAllSections()">Save Changes to JSON</button>
-        <button onclick="clearResumeContent()">Clear All Entries</button>
-        <button onclick="location.reload()">Reset Builder</button>
+        <p style="font-size: 10px; color:#555;">Save your changes to the browser, clear all entries, or reload the page to start over.</p>
+        <button id="save-json-button" onclick="saveToLocalStorage()">Save Changes in Browser</button>
+        <button onclick="clearResumeContent()">Clear All Entries & Saved Data</button>
+        <button onclick="location.reload()">Reload Page</button>
     </div>
      <!-- Print Options -->
     <div class="input-section">
