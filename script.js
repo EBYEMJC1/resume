@@ -53,6 +53,7 @@ async function initializeResume() {
 
     if (!loadedFromStorage) {
         console.log("Loading default data from JSON files...");
+        
         dynamicSections = [
             { id: 'education', title: 'Education', type: 'education-entry' },
             { id: 'technical-skills', title: 'Technical Skills', type: 'paragraph' },
@@ -71,6 +72,7 @@ async function initializeResume() {
         };
 
         const filesToFetch = [...new Set(dynamicSections.map(s => dataFiles[s.type]))];
+        
         const fetchPromises = filesToFetch.map(file =>
             fetch(file)
                 .then(res => res.ok ? res.json() : Promise.reject(`Failed to load ${file}`))
@@ -82,9 +84,18 @@ async function initializeResume() {
             const fileDataMap = {};
             filesToFetch.forEach((file, index) => { fileDataMap[file] = allData[index]; });
 
+            // --- THE FIX IS HERE ---
+            // The logic now correctly populates the main data object from the fetched files.
             dynamicSections.forEach(section => {
-                const file = dataFiles[section.type];
-                resumeContentData.sections[section.id] = fileDataMap[file][section.id] || [];
+                const fileNameForType = dataFiles[section.type]; // e.g., 'coursework-list.json'
+                const fileContent = fileDataMap[fileNameForType]; // The entire JS object from that file
+                
+                // Look for a key in the file content that matches the section's ID.
+                if (fileContent && fileContent[section.id]) {
+                    resumeContentData.sections[section.id] = fileContent[section.id];
+                } else {
+                    resumeContentData.sections[section.id] = []; // Fallback to empty if not found
+                }
             });
 
             resumeContentData.header = {
@@ -115,6 +126,8 @@ async function initializeResume() {
     renderSectionRemovalList();
     setupEventListeners();
 }
+
+// ... the rest of the file is unchanged, but included for completeness ...
 
 function setupEventListeners() {
     ['name', 'address', 'email', 'phone'].forEach(id => {
@@ -157,109 +170,7 @@ function handleResumeInteraction(event) { const target = event.target; const cou
 function loadEntryForEditing(sectionId, index) { const section = dynamicSections.find(s => s.id === sectionId); if (!section) return; let formTypeKey; let formElementId; editingContext = { sectionId, type: section.type }; if (section.type === 'coursework-list') { formTypeKey = 'coursework'; formElementId = 'add-coursework-section-form'; editingContext.courseIndex = index; const courseData = resumeContentData.sections[sectionId]?.[index]; if (courseData) { document.getElementById('coursework-section-select').value = sectionId; document.getElementById('coursework-name-new').value = courseData.name; document.getElementById('coursework-grade-new').value = courseData.grade || ''; document.getElementById('coursework-show-grade-new').checked = courseData.showGrade; } } else { editingContext.entryIndex = index; const entryData = resumeContentData.sections[sectionId]?.[index]; if (section.type === 'education-entry') { formTypeKey = 'education'; formElementId = 'add-education-section'; document.getElementById('edu-section-select').value = sectionId; ['degree', 'institution', 'date', 'gpa', 'expected'].forEach(f => document.getElementById(`edu-${f}`).value = entryData?.[f] || ''); } else if (section.type === 'structured-entry') { formTypeKey = 'structured'; formElementId = 'add-structured-section'; document.getElementById('structured-section-select').value = sectionId; ['position', 'company', 'location', 'dates'].forEach(f => document.getElementById(`structured-${f}`).value = entryData?.[f] || ''); const bulletsContainer = document.getElementById('structured-bullets-container'); bulletsContainer.querySelectorAll('.bullet-item').forEach(item => item.remove()); (entryData?.bullets || []).forEach(bullet => { if (typeof bullet === 'string') addMainBulletInputForm('structured-bullets-container', bullet); else if (typeof bullet === 'object' && bullet.text) addMainBulletInputForm('structured-bullets-container', bullet.text, bullet.subBullets || []); }); if (!entryData?.bullets || entryData.bullets.length === 0) addMainBulletInputForm('structured-bullets-container', ''); } else if (section.type === 'list-item') { formTypeKey = 'list'; formElementId = 'add-list-section'; document.getElementById('list-section-select').value = sectionId; const bulletsContainer = document.getElementById('list-bullets-container'); bulletsContainer.querySelectorAll('.bullet-item').forEach(item => item.remove()); (entryData?.bullets || []).forEach(bullet => { if (typeof bullet === 'string') addMainBulletInputForm('list-bullets-container', bullet); else if (typeof bullet === 'object' && bullet.text) addMainBulletInputForm('list-bullets-container', bullet.text, bullet.subBullets || []); }); if (!entryData?.bullets || entryData.bullets.length === 0) addMainBulletInputForm('list-bullets-container', ''); } else if (section.type === 'paragraph') { formTypeKey = 'paragraph'; formElementId = 'add-paragraph-section'; document.getElementById('para-section-select').value = sectionId; document.getElementById('skills-content').value = entryData || ''; } } if(formTypeKey && formElementId) { setFormMode(formTypeKey, true); const formElement = document.getElementById(formElementId); if (formElement) formElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } }
 function removeResumeEntry(sectionId, entryIndex) { const section = dynamicSections.find(s => s.id === sectionId); if (!section) return; if (section.type === 'paragraph') { resumeContentData.sections[sectionId] = []; if (editingContext && editingContext.type === 'paragraph' && editingContext.sectionId === sectionId) { cancelEdit('paragraph'); } } else if (section.type === 'coursework-list') { if (confirm("Are you sure you want to remove all courses from this section?")) { resumeContentData.sections[sectionId] = []; if (editingContext && editingContext.type === 'coursework-list' && editingContext.sectionId === sectionId) { cancelEdit('coursework'); } } else { return; } } else if (resumeContentData.sections[sectionId]?.[entryIndex] !== undefined) { resumeContentData.sections[sectionId].splice(entryIndex, 1); if (editingContext && editingContext.type === section.type && editingContext.sectionId === sectionId && editingContext.entryIndex === entryIndex) { cancelEdit(section.type); } } populateResumeContent(); }
 function removeResumeBulletOrSubBullet(sectionId, entryIndex, bulletPathArray) { const entry = resumeContentData.sections[sectionId]?.[entryIndex]; const currentSection = dynamicSections.find(s => s.id === sectionId); if (!entry || !currentSection || !entry.bullets || (currentSection.type !== 'structured-entry' && currentSection.type !== 'list-item')) { return; } const mainBulletIndex = bulletPathArray[0]; const subBulletIndex = bulletPathArray.length > 1 ? bulletPathArray[1] : undefined; if (entry.bullets[mainBulletIndex] === undefined) return; if (subBulletIndex !== undefined) { const mainBullet = entry.bullets[mainBulletIndex]; if (typeof mainBullet === 'object' && mainBullet.subBullets?.[subBulletIndex] !== undefined) { mainBullet.subBullets.splice(subBulletIndex, 1); if (mainBullet.subBullets.length === 0) entry.bullets[mainBulletIndex] = mainBullet.text; } } else { entry.bullets.splice(mainBulletIndex, 1); } populateResumeContent(); }
-
-function populateResumeContent() {
-    dynamicSections.forEach(section => {
-        const contentDiv = document.getElementById(`content-${section.id}`);
-        if (!contentDiv) { console.warn(`Content div for section ${section.id} not found.`); return; }
-        contentDiv.innerHTML = '';
-        let entries = resumeContentData.sections[section.id] || [];
-        if (['education-entry', 'structured-entry', 'list-item'].includes(section.type)) {
-            entries.sort((a, b) => {
-                const dateA = (a.sortDate instanceof Date && !isNaN(a.sortDate.getTime())) ? a.sortDate : new Date(0);
-                const dateB = (b.sortDate instanceof Date && !isNaN(b.sortDate.getTime())) ? b.sortDate : new Date(0);
-                return dateB.getTime() - dateA.getTime();
-            });
-        }
-        if (section.type === 'coursework-list') {
-            const courseworkPreviewWrapper = document.createElement('div');
-            courseworkPreviewWrapper.classList.add('coursework-list-preview-wrapper');
-            courseworkPreviewWrapper.dataset.sectionId = section.id;
-            if (entries.length > 0) {
-                const ul = document.createElement('ul');
-                ul.classList.add('coursework-list-preview');
-                const sortedEntries = [...entries].sort((a, b) => a.name.localeCompare(b.name));
-                sortedEntries.forEach((courseObj) => {
-                    const originalIndex = entries.findIndex(e => e.name === courseObj.name && e.grade === courseObj.grade);
-                    const li = document.createElement('li');
-                    li.dataset.courseIndex = originalIndex;
-                    const textSpan = document.createElement('span');
-                    textSpan.classList.add('course-text-content');
-                    let courseText = processBolding(courseObj.name);
-                    if (courseObj.showGrade && courseObj.grade) { courseText += ` <span class="course-grade-display">(${courseObj.grade})</span>`; }
-                    textSpan.innerHTML = courseText;
-                    li.appendChild(textSpan);
-                    const itemControls = document.createElement('span');
-                    itemControls.classList.add('course-item-controls');
-                    itemControls.innerHTML = `<span class="control-btn edit" data-action="edit-course" title="Edit Course">✏️</span><span class="control-btn remove" data-action="remove-course" title="Remove Course">❌</span>`;
-                    li.appendChild(itemControls);
-                    ul.appendChild(li);
-                });
-                courseworkPreviewWrapper.appendChild(ul);
-            }
-            contentDiv.appendChild(courseworkPreviewWrapper);
-        } else {
-            entries.forEach((entry, entryIdx) => {
-                let entryWrapper;
-                let specificEntryControlsHtml = `<div class="entry-controls"><button class="entry-control-button" data-action="edit" title="Edit">✏️</button><button class="entry-control-button" data-action="remove" title="Remove">❌</button>`;
-                if (section.type === 'structured-entry' || section.type === 'education-entry') {
-                    specificEntryControlsHtml += `<button class="entry-control-button" data-action="move-entry" title="Move Entry">➔</button><button class="entry-control-button" data-action="copy-entry" title="Copy Entry">❏</button>`;
-                }
-                specificEntryControlsHtml += `</div>`;
-
-                // --- FIX #2: Separated switch cases for clarity and correctness ---
-                switch (section.type) {
-                    case 'education-entry':
-                        entryWrapper = document.createElement('div'); entryWrapper.classList.add('job-entry'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx;
-                        let eduTitle = `<span>${processBolding(entry.degree||'')}</span><span>${processBolding(entry.date||'')}</span>`;
-                        let eduLoc = `<span>${processBolding(entry.institution||'')}</span><span>${processBolding(entry.gpa?'GPA: '+entry.gpa:'')}</span>`;
-                        entryWrapper.innerHTML = `<div class="job-title">${eduTitle}</div><div class="location">${eduLoc}</div>${entry.expected?`<p>${processBolding(entry.expected)}</p>`:''}`;
-                        entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml);
-                        contentDiv.appendChild(entryWrapper);
-                        break;
-                    case 'structured-entry':
-                        entryWrapper = document.createElement('div'); entryWrapper.classList.add('job-entry'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx;
-                        let strTitle = `<span>${processBolding(entry.position||'')}</span><span>${processBolding(entry.dates||'')}</span>`;
-                        let strLoc = `<span>${processBolding(entry.company||'')}</span><span>${processBolding(entry.location||'')}</span>`;
-                        entryWrapper.innerHTML = `<div class="job-title">${strTitle}</div><div class="location">${strLoc}</div>`;
-                        if (entry.bullets?.length > 0) {
-                            const ulBullets = document.createElement('ul');
-                            entry.bullets.forEach((bulletItem, mainIdx) => { const li = document.createElement('li'); li.dataset.bulletPath = JSON.stringify([mainIdx]); const bulletText = typeof bulletItem === 'string' ? bulletItem : bulletItem.text; li.innerHTML = `<span class="bullet-text-content">${processBolding(bulletText)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`; if (typeof bulletItem === 'object' && bulletItem.subBullets?.length > 0) { const subUl = document.createElement('ul'); bulletItem.subBullets.forEach((subTxt, subIdx) => { const subLi = document.createElement('li'); subLi.dataset.bulletPath = JSON.stringify([mainIdx, subIdx]); subLi.innerHTML = `<span class="bullet-text-content">${processBolding(subTxt)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`; subUl.appendChild(subLi); }); li.appendChild(subUl); } ulBullets.appendChild(li); });
-                            entryWrapper.appendChild(ulBullets);
-                        }
-                        entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml);
-                        contentDiv.appendChild(entryWrapper);
-                        break;
-                    case 'list-item':
-                        entryWrapper = document.createElement('div'); entryWrapper.classList.add('list-entry-item'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx;
-                        if (entry.bullets?.length > 0) {
-                            const ulBullets = document.createElement('ul');
-                            entry.bullets.forEach((bulletItem, mainIdx) => { const li = document.createElement('li'); li.dataset.bulletPath = JSON.stringify([mainIdx]); const bulletText = typeof bulletItem === 'string' ? bulletItem : bulletItem.text; li.innerHTML = `<span class="bullet-text-content">${processBolding(bulletText)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`; if (typeof bulletItem === 'object' && bulletItem.subBullets?.length > 0) { const subUl = document.createElement('ul'); bulletItem.subBullets.forEach((subTxt, subIdx) => { const subLi = document.createElement('li'); subLi.dataset.bulletPath = JSON.stringify([mainIdx, subIdx]); subLi.innerHTML = `<span class="bullet-text-content">${processBolding(subTxt)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`; subUl.appendChild(subLi); }); li.appendChild(subUl); } ulBullets.appendChild(li); });
-                            entryWrapper.appendChild(ulBullets);
-                        }
-                        entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml);
-                        contentDiv.appendChild(entryWrapper);
-                        break;
-                    case 'paragraph':
-                        const paragraphText = entry;
-                        if (paragraphText !== undefined) {
-                            entryWrapper = document.createElement('div');
-                            entryWrapper.classList.add('paragraph-entry');
-                            entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx;
-                            const p = document.createElement('p');
-                            p.innerHTML = processBolding(paragraphText || '');
-                            p.classList.add('paragraph-content-display');
-                            p.title = "Click to edit this paragraph block";
-                            entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml);
-                            entryWrapper.appendChild(p);
-                            contentDiv.appendChild(entryWrapper);
-                        }
-                        break;
-                }
-            });
-        }
-    });
-}
+function populateResumeContent() { dynamicSections.forEach(section => { const contentDiv = document.getElementById(`content-${section.id}`); if (!contentDiv) { console.warn(`Content div for section ${section.id} not found.`); return; } contentDiv.innerHTML = ''; let entries = resumeContentData.sections[section.id] || []; if (['education-entry', 'structured-entry', 'list-item'].includes(section.type)) { entries.sort((a, b) => { const dateA = (a.sortDate instanceof Date && !isNaN(a.sortDate.getTime())) ? a.sortDate : new Date(0); const dateB = (b.sortDate instanceof Date && !isNaN(b.sortDate.getTime())) ? b.sortDate : new Date(0); return dateB.getTime() - dateA.getTime(); }); } if (section.type === 'coursework-list') { const courseworkPreviewWrapper = document.createElement('div'); courseworkPreviewWrapper.classList.add('coursework-list-preview-wrapper'); courseworkPreviewWrapper.dataset.sectionId = section.id; if (entries.length > 0) { const ul = document.createElement('ul'); ul.classList.add('coursework-list-preview'); const sortedEntries = [...entries].sort((a, b) => a.name.localeCompare(b.name)); sortedEntries.forEach((courseObj) => { const originalIndex = entries.findIndex(e => e.name === courseObj.name && e.grade === courseObj.grade); const li = document.createElement('li'); li.dataset.courseIndex = originalIndex; const textSpan = document.createElement('span'); textSpan.classList.add('course-text-content'); let courseText = processBolding(courseObj.name); if (courseObj.showGrade && courseObj.grade) { courseText += ` <span class="course-grade-display">(${courseObj.grade})</span>`; } textSpan.innerHTML = courseText; li.appendChild(textSpan); const itemControls = document.createElement('span'); itemControls.classList.add('course-item-controls'); itemControls.innerHTML = `<span class="control-btn edit" data-action="edit-course" title="Edit Course">✏️</span><span class="control-btn remove" data-action="remove-course" title="Remove Course">❌</span>`; li.appendChild(itemControls); ul.appendChild(li); }); courseworkPreviewWrapper.appendChild(ul); } contentDiv.appendChild(courseworkPreviewWrapper); } else { entries.forEach((entry, entryIdx) => { let entryWrapper; let specificEntryControlsHtml = `<div class="entry-controls"><button class="entry-control-button" data-action="edit" title="Edit">✏️</button><button class="entry-control-button" data-action="remove" title="Remove">❌</button>`; if (section.type === 'structured-entry' || section.type === 'education-entry') { specificEntryControlsHtml += `<button class="entry-control-button" data-action="move-entry" title="Move Entry">➔</button><button class="entry-control-button" data-action="copy-entry" title="Copy Entry">❏</button>`; } specificEntryControlsHtml += `</div>`; switch (section.type) { case 'education-entry': entryWrapper = document.createElement('div'); entryWrapper.classList.add('job-entry'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx; let eduTitle = `<span>${processBolding(entry.degree||'')}</span><span>${processBolding(entry.date||'')}</span>`; let eduLoc = `<span>${processBolding(entry.institution||'')}</span><span>${processBolding(entry.gpa?'GPA: '+entry.gpa:'')}</span>`; entryWrapper.innerHTML = `<div class="job-title">${eduTitle}</div><div class="location">${eduLoc}</div>${entry.expected?`<p>${processBolding(entry.expected)}</p>`:''}`; entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml); contentDiv.appendChild(entryWrapper); break; case 'structured-entry': entryWrapper = document.createElement('div'); entryWrapper.classList.add('job-entry'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx; let strTitle = `<span>${processBolding(entry.position||'')}</span><span>${processBolding(entry.dates||'')}</span>`; let strLoc = `<span>${processBolding(entry.company||'')}</span><span>${processBolding(entry.location||'')}</span>`; entryWrapper.innerHTML = `<div class="job-title">${strTitle}</div><div class="location">${strLoc}</div>`; if (entry.bullets?.length > 0) { const ulBullets = document.createElement('ul'); entry.bullets.forEach((bulletItem, mainIdx) => { const li = document.createElement('li'); li.dataset.bulletPath = JSON.stringify([mainIdx]); const bulletText = typeof bulletItem === 'string' ? bulletItem : bulletItem.text; li.innerHTML = `<span class="bullet-text-content">${processBolding(bulletText)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`; if (typeof bulletItem === 'object' && bulletItem.subBullets?.length > 0) { const subUl = document.createElement('ul'); bulletItem.subBullets.forEach((subTxt, subIdx) => { const subLi = document.createElement('li'); subLi.dataset.bulletPath = JSON.stringify([mainIdx, subIdx]); subLi.innerHTML = `<span class="bullet-text-content">${processBolding(subTxt)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`; subUl.appendChild(subLi); }); li.appendChild(subUl); } ulBullets.appendChild(li); }); entryWrapper.appendChild(ulBullets); } entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml); contentDiv.appendChild(entryWrapper); break; case 'list-item': entryWrapper = document.createElement('div'); entryWrapper.classList.add('list-entry-item'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx; if (entry.bullets?.length > 0) { const ulBullets = document.createElement('ul'); entry.bullets.forEach((bulletItem, mainIdx) => { const li = document.createElement('li'); li.dataset.bulletPath = JSON.stringify([mainIdx]); const bulletText = typeof bulletItem === 'string' ? bulletItem : bulletItem.text; li.innerHTML = `<span class="bullet-text-content">${processBolding(bulletText)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`; if (typeof bulletItem === 'object' && bulletItem.subBullets?.length > 0) { const subUl = document.createElement('ul'); bulletItem.subBullets.forEach((subTxt, subIdx) => { const subLi = document.createElement('li'); subLi.dataset.bulletPath = JSON.stringify([mainIdx, subIdx]); subLi.innerHTML = `<span class="bullet-text-content">${processBolding(subTxt)}</span><span class="bullet-control-btn edit" data-action="edit-bullet" title="Edit">✏️</span><span class="bullet-control-btn remove" data-action="remove-bullet" title="Remove">❌</span>`; subUl.appendChild(subLi); }); li.appendChild(subUl); } ulBullets.appendChild(li); }); entryWrapper.appendChild(ulBullets); } entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml); contentDiv.appendChild(entryWrapper); break; case 'paragraph': const paragraphText = entry; if (paragraphText !== undefined) { entryWrapper = document.createElement('div'); entryWrapper.classList.add('paragraph-entry'); entryWrapper.dataset.sectionId = section.id; entryWrapper.dataset.entryIndex = entryIdx; const p = document.createElement('p'); p.innerHTML = processBolding(paragraphText || ''); p.classList.add('paragraph-content-display'); p.title = "Click to edit this paragraph block"; entryWrapper.insertAdjacentHTML('afterbegin', specificEntryControlsHtml); entryWrapper.appendChild(p); contentDiv.appendChild(entryWrapper); } break; } }); } }); }
 function openMoveCopyModal(sourceSectionId, entryIndex, actionType) { const sourceSection = dynamicSections.find(s => s.id === sourceSectionId); if (!sourceSection) return; const entryType = sourceSection.type; if (entryType === 'coursework-list') { alert("Moving or copying the entire coursework section is not supported."); return; } moveCopyContext = { sourceSectionId, entryIndex, actionType, entryType }; const modal = document.getElementById('move-copy-modal'); const modalTitle = document.getElementById('move-copy-modal-title'); const targetSelect = document.getElementById('move-copy-target-section'); const confirmButton = document.getElementById('move-copy-confirm'); modalTitle.textContent = actionType === 'move-entry' ? 'Move Entry To...' : 'Copy Entry To...'; targetSelect.innerHTML = ''; let compatibleSections; if (actionType === 'copy-entry') { compatibleSections = dynamicSections.filter(s => s.type === entryType); } else { compatibleSections = dynamicSections.filter(s => s.type === entryType && s.id !== sourceSectionId); } if (compatibleSections.length === 0) { const option = document.createElement('option'); option.value = ""; option.textContent = (actionType === 'copy-entry' && dynamicSections.some(s => s.id === sourceSectionId && s.type === entryType)) ? "No *other* compatible sections" : "No compatible sections available"; targetSelect.appendChild(option); targetSelect.disabled = true; confirmButton.disabled = true; } else { compatibleSections.forEach(section => { const option = document.createElement('option'); option.value = section.id; option.textContent = section.title; if (section.id === sourceSectionId && actionType === 'copy-entry') { option.textContent += " (current section)"; } targetSelect.appendChild(option); }); targetSelect.disabled = false; confirmButton.disabled = false; } modal.style.display = 'block'; }
 function closeMoveCopyModal() { const modal = document.getElementById('move-copy-modal'); modal.style.display = 'none'; moveCopyContext = null; }
 function performMoveCopyEntry() { if (!moveCopyContext) return; const { sourceSectionId, entryIndex, actionType, entryType } = moveCopyContext; const targetSectionId = document.getElementById('move-copy-target-section').value; if (!targetSectionId) { alert("Please select a target section."); return; } if (entryType === 'coursework-list') { closeMoveCopyModal(); return; } const sourceSectionDataArray = resumeContentData.sections[sourceSectionId]; if (!sourceSectionDataArray || sourceSectionDataArray[entryIndex] === undefined) { console.error("Source entry not found for move/copy operation at index:", entryIndex); closeMoveCopyModal(); return; } let entryToProcess = JSON.parse(JSON.stringify(sourceSectionDataArray[entryIndex])); if (entryToProcess.hasOwnProperty('sortDate') && typeof entryToProcess.sortDate === 'string') { const parsedDate = new Date(entryToProcess.sortDate); if (!isNaN(parsedDate)) entryToProcess.sortDate = parsedDate; else { console.warn("Failed to parse date string during move/copy, defaulting:", entryToProcess.sortDate); entryToProcess.sortDate = new Date(0); } } else if (entryToProcess.hasOwnProperty('sortDate') && !(entryToProcess.sortDate instanceof Date)) { console.warn("sortDate was not a string or Date after stringify/parse, defaulting."); entryToProcess.sortDate = new Date(0); } if (!resumeContentData.sections[targetSectionId]) { resumeContentData.sections[targetSectionId] = []; } const targetArray = resumeContentData.sections[targetSectionId]; if (actionType === 'copy-entry') { if (targetSectionId === sourceSectionId && typeof entryIndex === 'number' && entryIndex < targetArray.length) { targetArray.splice(entryIndex + 1, 0, entryToProcess); } else { targetArray.push(entryToProcess); } } else { targetArray.push(entryToProcess); if (sourceSectionId === targetSectionId) { const originalSourceArray = resumeContentData.sections[sourceSectionId]; if (typeof entryIndex === 'number' && entryIndex < originalSourceArray.length) { originalSourceArray.splice(entryIndex, 1); } else { console.warn("Move within same section: original entryIndex invalid after push or was initially invalid."); } } else { if (typeof entryIndex === 'number' && entryIndex < sourceSectionDataArray.length) { sourceSectionDataArray.splice(entryIndex, 1); } else { console.warn("Move to different section: entryIndex invalid for source array."); } } } populateResumeContent(); closeMoveCopyModal(); }
