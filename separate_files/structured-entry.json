@@ -1,0 +1,54 @@
+{
+  "relevant-experience": [
+    {
+      "position": "CREP Student Researcher", "company": "CSUF", "location": "Fullerton, CA", "dates": "August 2022 - May 2023",
+      "bullets": [ "Managed and **cleaned** a complex health-related dataset (N=62,482) from the Tennessee Cancer Registry for localized malignant breast cancer (LMBC)", "Reviewed 5 papers on various cancers to **identify demographic and clinical variables** consistently linked to outcomes (e.g., age, marital status, insurance type)", "Performed quantitative analysis, including **Chi-square tests and multivariate logistic regression**, on cleaned health data" ]
+    },
+    {
+      "position": "DIA Jumpstart Student Researcher", "company": "University of Southern California", "location": "Los Angeles, CA", "dates": "June 2022 - August 2022",
+      "bullets": [ "Employed a bash script to process and trim RNA sequencing datasets, using **Seqtk v1.3** removing 5 base pairs iteratively from the 3' end of reads until a minimum length of 36 bp", "Explored **read length effect** through use of 12 samples finding that read length from 36 to 76 bp raised HLA caller accuracy from 63% to 77%, except for PHLAT, seq2HLA, and HLAMiner" ]
+    },
+    {
+      "position": "CIC-PCUBED", "company": "CSUF", "location": "Fullerton, CA", "dates": "June 2022 - August 2022",
+      "bullets": ["Collaborated on a Python project to identify cointegrated stocks for financial analysis"]
+    },
+    {
+      "position": "Summer Undergraduate Research Fellowship", "company": "University of Southern California", "location": "Los Angeles, CA", "dates": "June 2021 - August 2021",
+      "bullets": [ "Ran HLA typing pipelines using Bash with OptiType, PHLAT, and seq2HLA on RNA-seq data across six gold standard datasets", "Estimated allele-level accuracy of 99.4% (OptiType), 95.4% (PHLAT), and 95.9% (seq2HLA) for MHC class I, using the formula: (correct alleles / total alleles) × 100", "Measured CPU time per sample using Unix time, recording averages of 45.3 min (OptiType), 253 sec (PHLAT), and 6.9 min (seq2HLA)", "Recorded memory usage via /usr/bin/time -v, with averages of 14.2 GB (OptiType), 9.3 GB (PHLAT), and 0.36 GB (seq2HLA)" ]
+    }
+  ],
+  "other-experience": [
+    {
+      "position": "Lab Assistant, CPSC 121L", "company": "CSUF", "location": "Fullerton, CA", "dates": "Aug 2024 – May 2025",
+      "bullets": [ "**Assisted students** with resolving **compilation, syntax, runtime, and logic errors** in C/C++ labs by interpreting terminal error messages, analyzing output from `make test`, and guiding students to trace code and compare with solution keys to identify mistakes.", "Answered student questions during lab and, when unable to resolve an issue, referred students to the **TA** to ensure comprehensive support." ]
+    },
+    {
+      "position": "Crew", "company": "Chipotle", "location": "Rancho Santa Margarita, CA", "dates": "August 2023 - Present",
+      "bullets": [ "Ensured high order accuracy by implementing a step-by-step confirmation process and verbally verifying item details, consistently limiting errors to fewer than 4 per 5-hour shift", "Utilized the cash register to charge 10–20 customers per shift, **double-checking totals** to prevent overcharging and **ensuring extras** like cups and chips were included when ordered", "Fostered safe food consumption by strictly following detailed operational and sanitation protocols during 100% of my closing shifts, reducing potential contamination risks" ]
+    },
+    {
+      "position": "Grader, CPSC 121A & 121L", "company": "CSUF", "location": "Fullerton, CA", "dates": "Aug 2022 – May 2025",
+      "bullets": [ "**Graded** over **120 students’ worksheets and lab exercises per semester** using **Gradescope** and **Canvas**, checking for completion, applying late penalties, and verifying select assignments against solution keys to uphold course standards.", "Maintained **accuracy** and **consistency** in entering grades, ensuring compliance with course policies and confidentiality requirements." ]
+    },
+    {
+      "position": "Supplemental Instruction Leader (Computer Science)", "company": "CSUF", "location": "Fullerton, CA", "dates": "August 2022 - May 2025",
+      "bullets": [ "Tailored communication strategies, incorporating **analogies & rephrasing**, to simplify complex technical concepts related to hybrid x86-64 assembly with C++ enhancing comprehension", "Boosted student performance by **adapting explanations** through active questioning and observation, leading SI attendees to score 1–1.5x higher than non-attendees" ]
+    },
+    {
+      "position": "Supplemental Instruction Leader (Biology)", "company": "CSUF", "location": "Fullerton, CA", "dates": "August 2019 - May 2022",
+      "bullets": [ "Facilitated 2 weekly SI sessions for BIOL 151, a foundational course covering topics such as cellular structures, metabolic pathways, and gene regulation", "Supported increased course pass rates, as students attending SI sessions have an 83% pass rate in gateway courses, compared to 76% for those who do not participate" ]
+    },
+    {
+      "position": "ASSURE-US Member", "company": "CSUF", "location": "Fullerton, CA", "dates": "November 2019 - August 2021",
+      "bullets": ["Developed a decision tree model using **scikit-learn** in Python to analyze data for viable drug candidates targeting HIV-1 integrase"]
+    },
+    {
+      "position": "Peer Mentor", "company": "CSUF", "location": "Fullerton, CA", "dates": "August 2018 - December 2018",
+      "bullets": ["Provided personalized support to 25 students in the “Think Like Einstein” course by addressing questions and guiding them to campus resources such as Titan Connection, Titan Link, counselors, research opportunities, and professional communication skills"]
+    },
+    {
+      "position": "Orientation Leader", "company": "CSUF", "location": "Fullerton, CA", "dates": "June 2018 - August 2018",
+      "bullets": ["Guided diverse groups of new students, presenting essential campus resources and procedures daily to groups of 25-30 students"]
+    }
+  ]
+}
